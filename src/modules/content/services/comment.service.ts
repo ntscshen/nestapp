@@ -1,6 +1,6 @@
 // 评论数据操作
 
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 
 import { isNil } from 'lodash';
 
@@ -70,12 +70,13 @@ export class CommentService {
         if (!isNil(parent) && parent.post.id !== data.post) {
             throw new ForbiddenException('Parent comment and child comment must belong same post!');
         }
-        const item = await this.repository.save({
-            ...data,
-            parent,
-            post: await this.getPost(data.post),
-        });
-        return this.repository.findOneOrFail({ where: { id: item.id } });
+        // const item = await this.repository.save({
+        //     ...data,
+        //     parent,
+        //     post: await this.getPost(data.post),
+        // });
+        // return this.repository.findOneOrFail({ where: { id: item.id } });
+        return '新增评论';
     }
 
     /**

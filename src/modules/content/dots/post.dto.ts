@@ -17,12 +17,14 @@ import {
 
 import { isNil, toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators/dto-validation.decorator';
 import { toBoolean } from '@/modules/core/helpers';
 import { PaginateOptions } from '@/modules/database/types';
 
 import { PostOrderType } from '../constants';
 
 // 文章分页查询验证
+@DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
@@ -63,14 +65,16 @@ export class QueryPostDto implements PaginateOptions {
     @IsOptional()
     tag?: string;
 }
+
 // 文章创建验证
+@DtoValidation({ groups: ['create'] })
 export class CreatePostDto {
     // 创建文章，标题是必填的，更新文章，标题是可选的。
     @MaxLength(255, {
         always: true,
         message: '文章标题长度最大为 $constraint1',
     })
-    @IsNotEmpty({ groups: ['create'], message: '文化标题必须填写' })
+    @IsNotEmpty({ groups: ['create'], message: '文章标题必须填写' })
     @IsOptional({ groups: ['update'] })
     title: string;
 
@@ -123,6 +127,7 @@ export class CreatePostDto {
 // 文章更新验证
 // Update中的属性都继承自CreateDto，所以会出现一种情况，就是CreateDto中的所有必须属性，也会成为UpdateDto的必选类型
 // 所以使用 PartialType 将所有属性变为可选属性
+@DtoValidation({ groups: ['update'] })
 export class UpdatePostDto extends PartialType(CreatePostDto) {
     // 这两个装饰器都用了{ groups: ['update'] }选项，这意味着这些验证只在update组被触发。
     @IsUUID(undefined, { groups: ['update'], message: '文章ID格式错误' }) // 检查id是否是有效的UUID。

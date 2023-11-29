@@ -39,6 +39,8 @@ Expose: 是 class-transformer 库中的一个装饰器。
 export class PostEntity extends BaseEntity {
     // @PrimaryGeneratedColumn('uuid')
     // id: string;
+    // expose 显示
+    // exclude 排除，排斥
 
     @Expose()
     @PrimaryColumn({ type: 'varchar', generated: 'uuid', length: 36 })
