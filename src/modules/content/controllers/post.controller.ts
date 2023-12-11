@@ -7,11 +7,14 @@ import {
     Patch,
     Post,
     Controller,
+    ValidationPipe,
 } from '@nestjs/common';
 
 import { isNil } from 'lodash';
 
 import { PostEntity } from '../type';
+import { CreatePostDto } from '../dtos/create-post.dto';
+import { UpdatePostDto } from '../dtos/update-post.dto';
 
 let posts: PostEntity[] = [
     { title: '第一篇文章标题', body: '第一篇文章内容' },
@@ -37,7 +40,18 @@ export class PostController {
     }
 
     @Post()
-    async createPost(@Body() data: PostEntity): Promise<PostEntity> {
+    async createPost(
+        @Body(
+            new ValidationPipe({
+                transform: true,
+                forbidNonWhitelisted: true,
+                forbidUnknownValues: true,
+                validationError: { target: false },
+                groups: ['create'],
+            }),
+        )
+        data: CreatePostDto,
+    ): Promise<PostEntity> {
         const newPost: PostEntity = {
             id: Math.max(...posts.map(({ id }) => id + 1)),
             ...data,
@@ -47,7 +61,18 @@ export class PostController {
     }
 
     @Patch()
-    async updatePost(@Body() data: Partial<PostEntity>): Promise<PostEntity> {
+    async updatePost(
+        @Body(
+            new ValidationPipe({
+                transform: true,
+                forbidNonWhitelisted: true,
+                forbidUnknownValues: true,
+                validationError: { target: false },
+                groups: ['update'],
+            }),
+        )
+        data: UpdatePostDto,
+    ): Promise<PostEntity> {
         let toUpdate = posts.find((item) => item.id === Number(data.id));
         if (isNil(toUpdate)) throw new NotFoundException(`the post with id ${data.id} not exits!`);
         toUpdate = { ...toUpdate, ...data };
