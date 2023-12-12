@@ -12,9 +12,9 @@ import {
 
 import { isNil } from 'lodash';
 
-import { PostEntity } from '../type';
 import { CreatePostDto } from '../dtos/create-post.dto';
 import { UpdatePostDto } from '../dtos/update-post.dto';
+import { PostEntity } from '../type';
 
 let posts: PostEntity[] = [
     { title: '第一篇文章标题', body: '第一篇文章内容' },
