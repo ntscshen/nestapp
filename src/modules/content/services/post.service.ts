@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isFunction, isNil, omit } from 'lodash';
 import {
     DataSource,
-    EntityManager,
     EntityNotFoundError,
     IsNull,
     Not,
@@ -11,10 +10,13 @@ import {
     SelectQueryBuilder,
 } from 'typeorm';
 
-import { PaginateOptions, QueryHook } from '@/modules/database/types';
+import { paginate } from '@/modules/database/helpers';
+import { QueryHook } from '@/modules/database/types';
 
 import { PostOrderType } from '../constants';
+import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostEntity } from '../entities/post.entity';
+import { PostRepository } from '../entities/repositories';
 
 // src/modules/content/services/post.service.ts
 @Injectable()
@@ -25,7 +27,7 @@ export class PostService {
         protected repository: Repository<PostEntity>,
 
         private datasource: DataSource,
-        private entityManager: EntityManager,
+        private postRepository: PostRepository,
     ) {}
 
     /**
@@ -33,9 +35,16 @@ export class PostService {
      * @param options 分页选项
      * @param callback 添加额外的查询
      */
-    async paginate(options: PaginateOptions, callback?: QueryHook<PostEntity>) {
-        // const qb = await this.buildListQuery(this.repository.buildBaseQB(), options, callback);
-        // return paginate(qb, options);
+    async paginate(options: QueryPostDto, callback?: QueryHook<PostEntity>) {
+        console.log('🚀 ~ file: post.service.ts:38 ~ PostService ~ paginate ~ options:', options);
+        const queryBuilder = this.postRepository.createQueryBuilder('post');
+        // const post = await this.postRepository.findOne({
+        //     where: { id: '7b1a6bd3-e5e4-4786-876c-731ebcec55e3' },
+        // });
+        // console.log('🚀 ~ file: post.service.ts:42 ~ PostService ~ paginate ~ post:', post);
+        // const queryBuilder = this.repository.createQueryBuilder('post');
+        const qb = await this.buildListQuery(queryBuilder, options, callback);
+        return paginate(qb, options); // 这里的paginate是一个工具方法
     }
 
     /**
@@ -44,6 +53,7 @@ export class PostService {
      * @param callback 添加额外的查询
      */
     async detail(id: string, callback?: QueryHook<PostEntity>) {
+        // let qb = this.postRepository.createQueryBuilder('post');
         let qb = this.repository.createQueryBuilder('post');
         // let qb = this.repository.buildBaseQB();
         qb.where(`post.id = :id`, { id });
@@ -74,18 +84,16 @@ export class PostService {
      * 创建文章
      * @param data
      */
-    async create(data: Record<string, any>) {
-        console.log('🚀 ~ file: post.service.ts:46 ~ PostService ~ create ~ data:', data);
+    async create(data: CreatePostDto) {
         const item = await this.repository.save(data);
-        console.log('item :>> ', item);
-        // return this.detail(item.id);
+        return this.detail(item.id);
     }
 
     /**
      * 更新文章
      * @param data
      */
-    async update(data: Record<string, any>) {
+    async update(data: UpdatePostDto) {
         const result = await this.repository.update(data.id, omit(data, ['id']));
         if (result.affected === 0) {
             throw new Error('No item was updated');
@@ -133,6 +141,7 @@ export class PostService {
      *  对文章进行排序的Query构建
      * @param qb
      * @param orderBy 排序方式
+     * 'ASC' 升序或 'DESC' 降序
      */
     protected queryOrderBy(qb: SelectQueryBuilder<PostEntity>, orderBy?: PostOrderType) {
         switch (orderBy) {

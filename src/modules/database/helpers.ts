@@ -31,9 +31,9 @@ export const paginate = async <E extends ObjectLiteral>(
         meta: {
             totalItems,
             itemCount,
-            perPage: limit,
+            perPage: Number(limit),
             totalPages,
-            currentPage: page,
+            currentPage: Number(page),
         },
     };
 };

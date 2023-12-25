@@ -1,24 +1,67 @@
-import { Injectable } from '@nestjs/common';
-import { IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
-@Injectable()
+import {
+    IsDateString,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    MaxLength,
+    Min,
+    ValidateIf,
+    ValidateNested,
+} from 'class-validator';
+
+import { isNil, toNumber } from 'lodash';
+
+class ProfileDto {
+    @IsString()
+    bio: string;
+}
+/**
+ * 文章创建验证
+ */
 export class CreatePostDto {
     @MaxLength(255, {
         always: true,
-        message: '帖子标题长度最大为$constraint1',
+        message: '文章标题长度最大为$constraint1',
     })
-    @IsNotEmpty({ groups: ['create'], message: '帖子标题必须填写' })
+    @IsNotEmpty({ groups: ['create'], message: '文章标题必须填写' })
     @IsOptional({ groups: ['update'] })
     title: string;
 
-    @IsNotEmpty({ groups: ['create'], message: '帖子内容必须填写' })
+    @IsNotEmpty({ groups: ['create'], message: '文章内容必须填写' })
     @IsOptional({ groups: ['update'] })
     body: string;
 
     @MaxLength(500, {
         always: true,
-        message: '帖子描述长度最大为$constraint1',
+        message: '文章描述长度最大为$constraint1',
     })
     @IsOptional({ always: true })
     summary?: string;
+
+    @IsDateString({ strict: true }, { always: true })
+    @IsOptional({ always: true })
+    @ValidateIf((value) => !isNil(value.publishedAt))
+    @Transform(({ value }) => (value === 'null' ? null : value))
+    publishedAt?: Date;
+
+    @MaxLength(20, {
+        each: true,
+        always: true,
+        message: '每个关键字长度最大为$constraint1',
+    })
+    @IsOptional({ always: true })
+    keywords?: string[];
+
+    @Transform(({ value }) => toNumber(value))
+    @Min(0, { always: true, message: '排序值必须大于0' })
+    @IsNumber(undefined, { always: true })
+    @IsOptional({ always: true })
+    customOrder = 0;
+
+    @ValidateNested()
+    @Type(() => ProfileDto)
+    profile: ProfileDto;
 }

@@ -10,3 +10,5 @@ export class PostRepository extends Repository<PostEntity> {
         return this.createQueryBuilder('post');
     }
 }
+
+// decorator /'dekəreɪtə/ 装饰工 油漆匠
