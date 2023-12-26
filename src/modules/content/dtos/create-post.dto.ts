@@ -1,23 +1,17 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 import {
     IsDateString,
     IsNotEmpty,
     IsNumber,
     IsOptional,
-    IsString,
     MaxLength,
     Min,
     ValidateIf,
-    ValidateNested,
 } from 'class-validator';
 
 import { isNil, toNumber } from 'lodash';
 
-class ProfileDto {
-    @IsString()
-    bio: string;
-}
 /**
  * 文章创建验证
  */
@@ -60,8 +54,4 @@ export class CreatePostDto {
     @IsNumber(undefined, { always: true })
     @IsOptional({ always: true })
     customOrder = 0;
-
-    @ValidateNested()
-    @Type(() => ProfileDto)
-    profile: ProfileDto;
 }
