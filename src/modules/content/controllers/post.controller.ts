@@ -8,17 +8,23 @@ import {
     Patch,
     Post,
     Query,
+    SerializeOptions,
+    UseInterceptors,
     ValidationPipe,
 } from '@nestjs/common';
+
+import { AppInterceptor } from '@/modules/core/app.interceptor';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostService } from '../services/post.service';
 
+@UseInterceptors(AppInterceptor)
 @Controller('posts')
 export class PostController {
     constructor(protected service: PostService) {}
 
     @Get()
+    @SerializeOptions({ groups: ['post-list'] })
     async list(
         @Query(
             new ValidationPipe({
@@ -36,6 +42,7 @@ export class PostController {
     }
 
     @Get(':id')
+    @SerializeOptions({ groups: ['post-detail'] })
     async detail(
         @Param('id', new ParseUUIDPipe())
         id: string,
@@ -44,6 +51,7 @@ export class PostController {
     }
 
     @Post()
+    @SerializeOptions({ groups: ['post-detail'] })
     async create(
         @Body(
             new ValidationPipe({
@@ -61,6 +69,7 @@ export class PostController {
     }
 
     @Patch()
+    @SerializeOptions({ groups: ['post-detail'] })
     async update(
         @Body(
             new ValidationPipe({
@@ -74,10 +83,12 @@ export class PostController {
         )
         data: UpdatePostDto,
     ) {
-        return this.service.update(data);
+        await this.service.update(data);
+        return this.service.detail(data.id);
     }
 
     @Delete(':id')
+    @SerializeOptions({ groups: ['post-detail'] })
     async delete(@Param('id', new ParseUUIDPipe()) id: string) {
         return this.service.delete(id);
     }
