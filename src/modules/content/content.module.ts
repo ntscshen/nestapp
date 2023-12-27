@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from '../database/database.module';
 
 import { PostController } from './controllers/post.controller';
-import { PostEntity } from './entities/post.entity';
+import { CategoryEntity, PostEntity } from './entities';
 import { PostRepository } from './entities/repositories';
 import { SanitizeService } from './services';
 import { PostService } from './services/post.service';
@@ -13,7 +13,7 @@ import { PostSubscriber } from './subscribers';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([PostEntity]),
+        TypeOrmModule.forFeature([PostEntity, CategoryEntity]),
         // DatabaseModule.forRepository([PostRepository]),
         DatabaseModule.forRepositorySingle(PostRepository),
     ],

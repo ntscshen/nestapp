@@ -4,11 +4,15 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    ManyToOne,
     PrimaryColumn,
+    Relation,
     UpdateDateColumn,
 } from 'typeorm';
 
 import { PostBodyType } from '../constants';
+
+import { CategoryEntity } from './category.entity';
 
 @Exclude()
 @Entity('content_posts')
@@ -66,4 +70,10 @@ export class PostEntity extends BaseEntity {
         comment: '更新时间',
     })
     updatedAt: Date;
+
+    @ManyToOne(() => CategoryEntity, (category) => category.posts, {
+        nullable: true,
+        onDelete: 'SET NULL', // 当前实体为项目主体内容，当one端被删除时，当前的关联实体应该被设置为NULL，而不是在数据库中被级联删除
+    })
+    category: Relation<CategoryEntity>;
 }
