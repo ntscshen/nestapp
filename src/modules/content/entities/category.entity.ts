@@ -47,5 +47,5 @@ export class CategoryEntity extends BaseEntity {
     @OneToMany(() => PostEntity, (post) => post.category, {
         cascade: true,
     })
-    posts: Relation<PostEntity>;
+    posts: Relation<PostEntity[]>;
 }

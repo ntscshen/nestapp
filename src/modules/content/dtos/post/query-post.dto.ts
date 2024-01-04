@@ -1,13 +1,13 @@
 import { Transform } from 'class-transformer';
 
-import { IsBoolean, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 
 import { toNumber } from 'lodash';
 
 import { toBoolean } from '@/modules/core/utils';
 import { PaginateOptions } from '@/modules/database/types';
 
-import { PostOrderType } from '../constants';
+import { PostOrderType } from '../../constants';
 
 /**
  * 文章分页查询验证
@@ -35,4 +35,8 @@ export class QueryPostDto implements PaginateOptions {
     @IsNumber()
     @IsOptional()
     limit = 10;
+
+    @IsUUID(undefined, { message: '分类ID格式错误' })
+    @IsOptional()
+    category?: string;
 }

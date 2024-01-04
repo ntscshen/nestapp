@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isFunction, isNil, omit } from 'lodash';
+import { isFunction, isNil } from 'lodash';
 import {
     DataSource,
     EntityNotFoundError,
@@ -16,19 +16,40 @@ import { QueryHook } from '@/modules/database/types';
 import { PostOrderType } from '../constants';
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostEntity } from '../entities/post.entity';
-import { PostRepository } from '../entities/repositories';
+import { CategoryRepository, PostRepository } from '../entities/repositories';
 
 // src/modules/content/services/post.service.ts
 @Injectable()
 export class PostService {
-    // constructor(protected repository: PostRepository) {}
     constructor(
         @InjectRepository(PostEntity)
         protected repository: Repository<PostEntity>,
+        protected categoryRepository: CategoryRepository,
 
         private datasource: DataSource,
         private postRepository: PostRepository,
     ) {}
+
+    /**
+     * 创建文章
+    //  * @param data
+     */
+    async create(data: CreatePostDto) {
+        // dto中category字段是 string
+        // 但是在Entity中定义的category是一个CategoryEntity实体
+        // 所以当你想要将值传递到CategoryEntity类型中时，需要将值转换为entity类型
+        const createPostDto = {
+            ...data,
+            // 文章所属的分类
+            category: !isNil(data.category)
+                ? await this.categoryRepository.findOneOrFail({ where: { id: data.category } })
+                : null,
+            //  PostEntity 中被定义为允许 null 值。
+        };
+        const item = await this.repository.save(createPostDto);
+
+        return this.detail(item.id);
+    }
 
     /**
      * 获取分页数据
@@ -81,23 +102,14 @@ export class PostService {
     }
 
     /**
-     * 创建文章
-     * @param data
-     */
-    async create(data: CreatePostDto) {
-        const item = await this.repository.save(data);
-        return this.detail(item.id);
-    }
-
-    /**
      * 更新文章
      * @param data
      */
     async update(data: UpdatePostDto) {
-        const result = await this.repository.update(data.id, omit(data, ['id']));
-        if (result.affected === 0) {
-            throw new Error('No item was updated');
-        }
+        // const result = await this.repository.update(data.id, omit(data, ['id']));
+        // if (result.affected === 0) {
+        //     throw new Error('No item was updated');
+        // }
         // return this.detail(data.id);
     }
 

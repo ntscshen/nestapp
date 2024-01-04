@@ -4,7 +4,10 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinTable,
+    ManyToMany,
     ManyToOne,
+    OneToMany,
     PrimaryColumn,
     Relation,
     UpdateDateColumn,
@@ -13,6 +16,8 @@ import {
 import { PostBodyType } from '../constants';
 
 import { CategoryEntity } from './category.entity';
+import { CommentEntity } from './comment.entity';
+import { TagEntity } from './tag.entity';
 
 @Exclude()
 @Entity('content_posts')
@@ -71,9 +76,23 @@ export class PostEntity extends BaseEntity {
     })
     updatedAt: Date;
 
+    @Expose()
     @ManyToOne(() => CategoryEntity, (category) => category.posts, {
         nullable: true,
         onDelete: 'SET NULL', // 当前实体为项目主体内容，当one端被删除时，当前的关联实体应该被设置为NULL，而不是在数据库中被级联删除
     })
     category: Relation<CategoryEntity>;
+
+    @Expose()
+    @OneToMany(() => CommentEntity, (comment) => comment.post, {
+        cascade: true,
+    })
+    comments: Relation<CommentEntity>[];
+
+    @Expose()
+    @ManyToMany(() => TagEntity, (tag) => tag.posts, {
+        cascade: true,
+    })
+    @JoinTable()
+    tags: Relation<TagEntity>[];
 }

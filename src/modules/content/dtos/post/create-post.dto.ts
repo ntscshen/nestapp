@@ -5,6 +5,7 @@ import {
     IsNotEmpty,
     IsNumber,
     IsOptional,
+    IsUUID,
     MaxLength,
     Min,
     ValidateIf,
@@ -54,4 +55,12 @@ export class CreatePostDto {
     @IsNumber(undefined, { always: true })
     @IsOptional({ always: true })
     customOrder = 0;
+
+    @IsUUID(undefined, {
+        each: true,
+        always: true,
+        message: 'ID格式不正确',
+    })
+    @IsOptional({ groups: ['update'] })
+    category: string;
 }
