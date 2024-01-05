@@ -5,25 +5,40 @@ import {
     Get,
     Param,
     ParseUUIDPipe,
+    Patch,
     Post,
     Query,
-    SerializeOptions,
     UseInterceptors,
     ValidationPipe,
 } from '@nestjs/common';
 
 import { AppInterceptor } from '@/modules/core/app.interceptor';
 
-import { CreateCommentDto, QueryCommentDto, QueryCommentTreeDto } from '../dtos';
-import { CommentService } from '../services/comment.service';
+import { CreateTagDto, QueryTagDto, UpdateTagDto } from '../dtos';
+import { TagService } from '../services';
 
 @UseInterceptors(AppInterceptor)
-@Controller('comments')
-export class CommentController {
-    constructor(protected service: CommentService) {}
+@Controller('tags')
+export class TagController {
+    constructor(protected service: TagService) {}
+
+    @Get()
+    async list(
+        @Query(
+            new ValidationPipe({
+                transform: true,
+                whitelist: true,
+                forbidNonWhitelisted: true,
+                forbidUnknownValues: true,
+                validationError: { target: false },
+            }),
+        )
+        options: QueryTagDto,
+    ) {
+        return this.service.paginate(options);
+    }
 
     @Post()
-    @SerializeOptions({ groups: ['comment-detail'] })
     async create(
         @Body(
             new ValidationPipe({
@@ -32,48 +47,38 @@ export class CommentController {
                 forbidNonWhitelisted: true,
                 forbidUnknownValues: true,
                 validationError: { target: false },
+                groups: ['create'],
             }),
         )
-        data: CreateCommentDto,
+        data: CreateTagDto,
     ) {
         return this.service.create(data);
     }
 
     @Delete(':id')
-    @SerializeOptions({ groups: ['comment-detail'] })
     async delete(@Param('id', new ParseUUIDPipe()) id: string) {
         return this.service.delete(id);
     }
 
-    @Get('tree')
-    @SerializeOptions({ groups: ['comment-tree'] })
-    async findTree(
-        @Query(
+    @Patch()
+    async update(
+        @Body(
             new ValidationPipe({
                 transform: true,
                 whitelist: true,
                 forbidNonWhitelisted: true,
                 forbidUnknownValues: true,
                 validationError: { target: false },
+                groups: ['update'],
             }),
         )
-        query: QueryCommentTreeDto,
+        data: UpdateTagDto,
     ) {
-        return this.service.findTrees(query);
+        return this.service.update(data);
     }
 
-    @Get()
-    @SerializeOptions({ groups: ['comment-list'] })
-    async list(
-        @Query(
-            new ValidationPipe({
-                transform: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-            }),
-        )
-        query: QueryCommentDto,
-    ) {
-        return this.service.paginate(query);
+    @Get(':id')
+    async detail(@Param('id', new ParseUUIDPipe()) id: string) {
+        return this.service.detail(id);
     }
 }

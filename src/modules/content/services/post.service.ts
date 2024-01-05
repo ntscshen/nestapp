@@ -57,12 +57,10 @@ export class PostService {
      * @param callback 添加额外的查询
      */
     async paginate(options: QueryPostDto, callback?: QueryHook<PostEntity>) {
-        console.log('🚀 ~ file: post.service.ts:38 ~ PostService ~ paginate ~ options:', options);
         const queryBuilder = this.postRepository.createQueryBuilder('post');
         // const post = await this.postRepository.findOne({
         //     where: { id: '7b1a6bd3-e5e4-4786-876c-731ebcec55e3' },
         // });
-        // console.log('🚀 ~ file: post.service.ts:42 ~ PostService ~ paginate ~ post:', post);
         // const queryBuilder = this.repository.createQueryBuilder('post');
         const qb = await this.buildListQuery(queryBuilder, options, callback);
         return paginate(qb, options); // 这里的paginate是一个工具方法
@@ -81,10 +79,8 @@ export class PostService {
         qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
         const item = await qb.getOne();
         if (!item) throw new EntityNotFoundError(PostEntity, `The post ${id} not exists!`);
-        console.log('item :>> ', item);
         return item;
         // const result = await this.repository.findOneBy({ id });
-        // console.log('🚀 ~ file: post.service.ts:43 ~ PostService ~ detail ~ result:', result);
     }
 
     async detail2(id: string, callback?: QueryHook<PostEntity>): Promise<PostEntity | null> {

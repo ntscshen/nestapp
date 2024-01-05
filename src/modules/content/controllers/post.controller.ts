@@ -37,7 +37,6 @@ export class PostController {
         )
         options: QueryPostDto,
     ) {
-        console.log('🚀 ~ file: post.controller.ts:34 ~ PostController ~ options:', options);
         return this.service.paginate(options);
     }
 

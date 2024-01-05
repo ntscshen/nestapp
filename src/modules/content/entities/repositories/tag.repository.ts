@@ -10,12 +10,10 @@ export class TagRepository extends Repository<TagEntity> {
     buildBaseQB() {
         return this.createQueryBuilder('tag')
             .leftJoinAndSelect('tag.posts', 'posts')
-            .addSelect((subQuery) => {
-                return subQuery
-                    .select('COUNT(posts.id)', 'postCount')
-                    .from(PostEntity, 'p')
-                    .where('posts.tagId = tag.id');
-            })
+            .addSelect(
+                (subQuery) => subQuery.select('COUNT(p.id)', 'postCount').from(PostEntity, 'p'),
+                'postCount',
+            )
             .orderBy('postCount', 'DESC')
             .loadRelationCountAndMap('tag.postCount', 'tag.posts');
     }

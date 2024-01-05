@@ -93,6 +93,16 @@ export class PostEntity extends BaseEntity {
     @ManyToMany(() => TagEntity, (tag) => tag.posts, {
         cascade: true,
     })
-    @JoinTable()
+    @JoinTable({
+        // name: 'content_posts_tags',
+        // joinColumn: {
+        //     name: 'postId',
+        //     referencedColumnName: 'id',
+        // },
+        // inverseJoinColumn: {
+        //     name: 'tagId',
+        //     referencedColumnName: 'id',
+        // },
+    })
     tags: Relation<TagEntity>[];
 }

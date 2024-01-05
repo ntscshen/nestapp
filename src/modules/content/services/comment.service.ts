@@ -103,9 +103,6 @@ export class CommentService {
         current?: string,
         parentId?: string,
     ): Promise<CommentEntity | null | undefined> {
-        console.log('current :>> ', current);
-        console.log('parentId :>> ', parentId);
-        console.log('current === parentId :>> ', current === parentId);
         if (current === parentId) return undefined; // 防止循环引用
         if (parentId === null || parentId === undefined) return null; // 未定义时返回null
 
