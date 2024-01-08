@@ -74,6 +74,7 @@ export class CommentController {
         )
         query: QueryCommentDto,
     ) {
+        console.log('🚀 ~ file: comment.controller.ts:77 ~ CommentController ~ query:', query);
         return this.service.paginate(query);
     }
 }
