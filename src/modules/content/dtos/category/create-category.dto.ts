@@ -10,7 +10,10 @@ import {
 } from 'class-validator';
 import { toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators';
+
 // 新增分类验证
+@DtoValidation({ groups: ['create'] })
 export class CreateCategoryDto {
     @MaxLength(25, {
         always: true,

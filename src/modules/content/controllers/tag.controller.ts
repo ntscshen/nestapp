@@ -9,10 +9,9 @@ import {
     Post,
     Query,
     UseInterceptors,
-    ValidationPipe,
 } from '@nestjs/common';
 
-import { AppInterceptor } from '@/modules/core/app.interceptor';
+import { AppInterceptor } from '@/modules/core/providers/app.interceptor';
 
 import { CreateTagDto, QueryTagDto, UpdateTagDto } from '../dtos';
 import { TagService } from '../services';
@@ -22,63 +21,38 @@ import { TagService } from '../services';
 export class TagController {
     constructor(protected service: TagService) {}
 
-    @Get()
-    async list(
-        @Query(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-            }),
-        )
-        options: QueryTagDto,
-    ) {
-        return this.service.paginate(options);
-    }
-
     @Post()
     async create(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['create'],
-            }),
-        )
+        @Body()
         data: CreateTagDto,
     ) {
         return this.service.create(data);
     }
 
-    @Delete(':id')
-    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
-        return this.service.delete(id);
-    }
-
     @Patch()
     async update(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['update'],
-            }),
-        )
+        @Body()
         data: UpdateTagDto,
     ) {
         return this.service.update(data);
     }
 
+    @Get()
+    async list(
+        @Query()
+        options: QueryTagDto,
+    ) {
+        console.log('🚀 ~ file: tag.controller.ts:45 ~ TagController ~ options:', options);
+        return this.service.paginate(options);
+    }
+
     @Get(':id')
     async detail(@Param('id', new ParseUUIDPipe()) id: string) {
         return this.service.detail(id);
+    }
+
+    @Delete(':id')
+    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
+        return this.service.delete(id);
     }
 }

@@ -15,7 +15,6 @@ async function bootstrap() {
     // 设置全局访问前缀
     app.setGlobalPrefix('api');
     // 允许跨越
-
     await app.listen(3000, '0.0.0.0');
     console.log('api >> : http://localhost:3000');
 }

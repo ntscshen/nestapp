@@ -13,9 +13,12 @@ import {
 
 import { isNil, toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators';
+
 /**
  * 文章创建验证
  */
+@DtoValidation({ groups: ['create'] })
 export class CreatePostDto {
     @MaxLength(255, {
         always: true,
@@ -63,4 +66,13 @@ export class CreatePostDto {
     })
     @IsOptional({ groups: ['update'] })
     category: string;
+
+    @IsUUID(undefined, {
+        each: true,
+        always: true,
+        message: 'ID格式不正确',
+    })
+    @IsNotEmpty({ groups: ['create'], message: '分类必须设置' })
+    @IsOptional({ always: true })
+    tags?: string[];
 }

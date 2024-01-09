@@ -1,5 +1,8 @@
 import { IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 
+import { DtoValidation } from '@/modules/core/decorators';
+
+@DtoValidation({ groups: ['create'] })
 export class CreateTagDto {
     @MaxLength(255, {
         always: true,

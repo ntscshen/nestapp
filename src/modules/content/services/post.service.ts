@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isFunction, isNil } from 'lodash';
+import { isArray, isFunction, isNil, omit } from 'lodash';
 import {
     DataSource,
     EntityNotFoundError,
+    In,
     IsNull,
     Not,
     Repository,
@@ -14,9 +15,10 @@ import { paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
 import { PostOrderType } from '../constants';
-import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
+import { CreatePostDto, UpdatePostDto } from '../dtos';
+import { PaginateDto } from '../dtos/paginate.dto';
 import { PostEntity } from '../entities/post.entity';
-import { CategoryRepository, PostRepository } from '../entities/repositories';
+import { CategoryRepository, PostRepository, TagRepository } from '../entities/repositories';
 
 // src/modules/content/services/post.service.ts
 @Injectable()
@@ -25,6 +27,7 @@ export class PostService {
         @InjectRepository(PostEntity)
         protected repository: Repository<PostEntity>,
         protected categoryRepository: CategoryRepository,
+        protected tagRepository: TagRepository,
 
         private datasource: DataSource,
         private postRepository: PostRepository,
@@ -44,6 +47,12 @@ export class PostService {
             category: !isNil(data.category)
                 ? await this.categoryRepository.findOneOrFail({ where: { id: data.category } })
                 : null,
+            // 文章关联的标签
+            tags: isArray(data.tags)
+                ? await this.tagRepository.findBy({
+                      id: In(data.tags),
+                  })
+                : [],
             //  PostEntity 中被定义为允许 null 值。
         };
         const item = await this.repository.save(createPostDto);
@@ -52,11 +61,47 @@ export class PostService {
     }
 
     /**
+     * 删除文章
+     * @param id
+     */
+    async delete(id: string) {
+        const item = await this.repository.findOneByOrFail({ id });
+        return this.repository.remove(item);
+    }
+
+    /**
+     * 更新文章
+     * @param data
+     */
+    async update(data: UpdatePostDto) {
+        const post = await this.detail(data.id);
+        if (data.category !== undefined) {
+            // 更新分类
+            const category = isNil(data.category)
+                ? null
+                : await this.categoryRepository.findOneByOrFail({ id: data.category });
+            post.category = category;
+            this.repository.save(post, { reload: true });
+        }
+
+        if (isArray(data.tags)) {
+            // 更新文章关联标签
+            await this.repository
+                .createQueryBuilder('post')
+                .relation(PostEntity, 'tags')
+                .of(post)
+                .addAndRemove(data.tags, post.tags ?? []);
+        }
+        await this.repository.update(data.id, omit(data, ['id', 'tags', 'category']));
+        return this.detail(data.id);
+    }
+
+    /**
      * 获取分页数据
      * @param options 分页选项
      * @param callback 添加额外的查询
      */
-    async paginate(options: QueryPostDto, callback?: QueryHook<PostEntity>) {
+    async paginate(options: PaginateDto, callback?: QueryHook<PostEntity>) {
         const queryBuilder = this.postRepository.createQueryBuilder('post');
         // const post = await this.postRepository.findOne({
         //     where: { id: '7b1a6bd3-e5e4-4786-876c-731ebcec55e3' },
@@ -95,27 +140,6 @@ export class PostService {
         // 完成查询并返回结果
         const post = await queryBuilder.where('post.id = :id', { id }).getOne();
         return post;
-    }
-
-    /**
-     * 更新文章
-     * @param data
-     */
-    async update(data: UpdatePostDto) {
-        // const result = await this.repository.update(data.id, omit(data, ['id']));
-        // if (result.affected === 0) {
-        //     throw new Error('No item was updated');
-        // }
-        // return this.detail(data.id);
-    }
-
-    /**
-     * 删除文章
-     * @param id
-     */
-    async delete(id: string) {
-        const item = await this.repository.findOneByOrFail({ id });
-        return this.repository.remove(item);
     }
 
     /**

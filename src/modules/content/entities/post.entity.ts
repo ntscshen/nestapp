@@ -84,25 +84,15 @@ export class PostEntity extends BaseEntity {
     category: Relation<CategoryEntity>;
 
     @Expose()
+    @ManyToMany(() => TagEntity, (tag) => tag.posts, {
+        cascade: true,
+    })
+    @JoinTable()
+    tags: Relation<TagEntity>[];
+
+    @Expose()
     @OneToMany(() => CommentEntity, (comment) => comment.post, {
         cascade: true,
     })
     comments: Relation<CommentEntity>[];
-
-    @Expose()
-    @ManyToMany(() => TagEntity, (tag) => tag.posts, {
-        cascade: true,
-    })
-    @JoinTable({
-        // name: 'content_posts_tags',
-        // joinColumn: {
-        //     name: 'postId',
-        //     referencedColumnName: 'id',
-        // },
-        // inverseJoinColumn: {
-        //     name: 'tagId',
-        //     referencedColumnName: 'id',
-        // },
-    })
-    tags: Relation<TagEntity>[];
 }

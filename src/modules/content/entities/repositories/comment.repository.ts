@@ -28,6 +28,10 @@ export class CommentRepository extends TreeRepository<CommentEntity> {
     async findTrees(options: FindCommentTreeOptions = {}) {
         options.relations = ['parent', 'children'];
         const roots = await this.findRoots(options); // 找到所有根节点
+        console.log(
+            '🚀 ~ file: comment.repository.ts:31 ~ CommentRepository ~ findTrees ~ roots:',
+            roots,
+        );
         const promises = roots.map((root) => this.findDescendantsTree(root, options));
 
         await Promise.all(promises);

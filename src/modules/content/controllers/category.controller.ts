@@ -10,10 +10,9 @@ import {
     Query,
     SerializeOptions,
     UseInterceptors,
-    ValidationPipe,
 } from '@nestjs/common';
 
-import { AppInterceptor } from '@/modules/core/app.interceptor';
+import { AppInterceptor } from '@/modules/core/providers/app.interceptor';
 
 import { CreateCategoryDto, QueryCategoryDto, UpdateCategoryDto } from '../dtos';
 import { CategoryService } from '../services/category.service';
@@ -24,41 +23,17 @@ export class CategoryController {
     constructor(protected service: CategoryService) {}
 
     @Post()
-    // @SerializeOptions({ groups: ['category-detail'] })
+    @SerializeOptions({ groups: ['category-detail'] })
     async create(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['create'],
-            }),
-        )
+        @Body()
         data: CreateCategoryDto,
     ) {
         return this.service.create(data);
     }
 
-    @Delete(':id')
-    @SerializeOptions({ groups: ['category-detail'] })
-    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
-        return this.service.delete(id);
-    }
-
     @Patch()
     async update(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['update'],
-            }),
-        )
+        @Body()
         data: UpdateCategoryDto,
     ) {
         return this.service.update(data);
@@ -70,26 +45,24 @@ export class CategoryController {
         return this.service.detail(id);
     }
 
+    @Get('tree')
+    @SerializeOptions({ groups: ['category-tree'] })
+    async findTrees() {
+        return this.service.findTrees();
+    }
+
     @Get()
     @SerializeOptions({ groups: ['category-list'] })
     async list(
-        @Query(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-            }),
-        )
+        @Query()
         options: QueryCategoryDto,
     ) {
         return this.service.paginate(options);
     }
 
-    @Get('tree')
-    @SerializeOptions({ groups: ['category-tree'] })
-    async findTrees() {
-        return this.service.findTrees();
+    @Delete(':id')
+    @SerializeOptions({ groups: ['category-detail'] })
+    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
+        return this.service.delete(id);
     }
 }

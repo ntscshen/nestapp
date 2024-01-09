@@ -4,6 +4,7 @@ import { IsBoolean, IsEnum, IsNumber, IsOptional, IsUUID, Min } from 'class-vali
 
 import { toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators';
 import { toBoolean } from '@/modules/core/utils';
 import { PaginateOptions } from '@/modules/database/types';
 
@@ -12,6 +13,9 @@ import { PostOrderType } from '../../constants';
 /**
  * 文章分页查询验证
  */
+// @DtoValidation({ groups: ['query'], type: 'query' })
+// @DtoValidation({ groups: ['query'], type: 'query' })
+@DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
@@ -39,4 +43,8 @@ export class QueryPostDto implements PaginateOptions {
     @IsUUID(undefined, { message: '分类ID格式错误' })
     @IsOptional()
     category?: string;
+
+    @IsUUID(undefined, { message: 'ID格式错误' })
+    @IsOptional()
+    tag?: string;
 }

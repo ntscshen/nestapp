@@ -1,6 +1,9 @@
 import { Transform } from 'class-transformer';
 import { IsDefined, IsNotEmpty, IsOptional, IsUUID, MaxLength, ValidateIf } from 'class-validator';
 
+import { DtoValidation } from '@/modules/core/decorators';
+
+@DtoValidation()
 export class CreateCommentDto {
     @MaxLength(1000, { message: '评论内容不能超过$constraint1个字' })
     @IsNotEmpty({ message: '评论内容不能为空' })
