@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
+import { useContainer } from 'class-validator';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -14,6 +16,7 @@ async function bootstrap() {
     });
     // 设置全局访问前缀
     app.setGlobalPrefix('api');
+    useContainer(app.select(AppModule), { fallbackOnErrors: true });
     // 允许跨越
     await app.listen(3000, '0.0.0.0');
     console.log('api >> : http://localhost:3000');

@@ -7,6 +7,13 @@ import { PostEntity } from '../content/entities/post.entity';
 import { PostSubscriber } from '../content/subscribers';
 
 import { CUSTOM_REPOSITORY_METADATA } from './constants';
+import { DataExistConstraint } from './constraints/data.exist.constraint';
+import { UniqueTreeConstraint } from './constraints/tree.unique.constraint';
+import { UniqueConstraint } from './constraints/unique.constraint';
+import {
+    UniqueExistConstraint,
+    UniqueTreeExistConstraint,
+} from './constraints/unique.exist.constraint';
 
 @Module({})
 export class DatabaseModule {
@@ -16,6 +23,13 @@ export class DatabaseModule {
             module: DatabaseModule,
             imports: [
                 TypeOrmModule.forRoot({ ...configRegister(), subscribers: [PostSubscriber] }),
+            ],
+            providers: [
+                DataExistConstraint,
+                UniqueConstraint,
+                UniqueExistConstraint,
+                UniqueTreeConstraint,
+                UniqueTreeExistConstraint,
             ],
         };
     }
