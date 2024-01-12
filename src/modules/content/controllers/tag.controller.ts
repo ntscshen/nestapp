@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 
 import { CreateTagDto, QueryTagDto, UpdateTagDto } from '../dtos';
+import { DeleteWithTrashDto } from '../dtos/delete-with-trash.dto';
 import { TagService } from '../services';
 
 @Controller('tags')
@@ -47,8 +48,14 @@ export class TagController {
         return this.service.detail(id);
     }
 
-    @Delete(':id')
-    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
-        return this.service.delete(id);
+    @Delete()
+    async delete(@Body() data: DeleteWithTrashDto) {
+        const { ids, trash } = data;
+        return this.service.delete(ids, trash);
+    }
+
+    @Patch('restore')
+    async restore(@Body() data: DeleteWithTrashDto) {
+        return this.service.restore(data.ids);
     }
 }

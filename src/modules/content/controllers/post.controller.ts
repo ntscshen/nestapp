@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
+import { DeleteWithTrashDto } from '../dtos/delete-with-trash.dto';
+import { RestoreDto } from '../dtos/restore.dto';
 import { PostService } from '../services/post.service';
 
 @Controller('posts')
@@ -55,9 +57,16 @@ export class PostController {
         return this.service.paginate(options);
     }
 
-    @Delete(':id')
-    @SerializeOptions({ groups: ['post-detail'] })
-    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
-        return this.service.delete(id);
+    @Delete()
+    @SerializeOptions({ groups: ['post-list'] })
+    async delete(@Body() data: DeleteWithTrashDto) {
+        const { ids, trash } = data;
+        return this.service.delete(ids, trash);
+    }
+
+    @Patch('restore')
+    @SerializeOptions({ groups: ['post-list'] })
+    async restore(@Body() data: RestoreDto) {
+        return this.service.restore(data?.ids);
     }
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
-import _ from 'lodash';
+import { omit, isNil } from 'lodash';
+
+import { In } from 'typeorm';
 
 import { paginate } from '@/modules/database/helpers';
 
@@ -32,20 +34,11 @@ export class TagService {
     }
 
     /**
-     * 删除标签
-     * @param id
-     */
-    async delete(id: string) {
-        const item = await this.repository.findOneByOrFail({ id });
-        return this.repository.remove(item);
-    }
-
-    /**
      * 更新标签
      * @param data
      */
     async update(data: UpdateTagDto) {
-        await this.repository.update(data.id, _.omit(data, ['id']));
+        await this.repository.update(data.id, omit(data, ['id']));
         return this.detail(data.id);
     }
 
@@ -57,5 +50,37 @@ export class TagService {
     async paginate(options: QueryTagDto) {
         const qb = this.repository.buildBaseQB();
         return paginate(qb, options);
+    }
+
+    /**
+     * 删除标签
+     * @param id
+     */
+    async delete(ids: string[], trash?: boolean) {
+        const items = await this.repository.find({
+            where: { id: In(ids) } as any,
+            withDeleted: true,
+        });
+        if (trash) {
+            const softs = items.filter((item) => isNil(item.deletedAt));
+            const directs = items.filter((item) => !isNil(item.deletedAt));
+            return [
+                ...(await this.repository.softRemove(softs)),
+                ...(await this.repository.remove(directs)),
+            ];
+        }
+        return this.repository.remove(items);
+    }
+
+    async restore(ids: string[]) {
+        const items = await this.repository.find({
+            where: { id: In(ids) } as any,
+            withDeleted: true,
+        });
+        const trasheds = items.filter((item) => !isNil(item)).map((item) => item.id);
+        if (trasheds.length < 1) return [];
+        await this.repository.restore(trasheds);
+        const qb = this.repository.buildBaseQB().where({ id: In(trasheds) });
+        return qb.getMany();
     }
 }

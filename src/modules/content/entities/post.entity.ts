@@ -1,8 +1,9 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import {
     BaseEntity,
     Column,
     CreateDateColumn,
+    DeleteDateColumn,
     Entity,
     JoinTable,
     ManyToMany,
@@ -75,6 +76,15 @@ export class PostEntity extends BaseEntity {
         comment: '更新时间',
     })
     updatedAt: Date;
+
+    @Expose()
+    @Type(() => Date)
+    @DeleteDateColumn({
+        // 每次软删除对象时，改日期都会更新(设置deletedAt为当前时间)
+        // 该值为 null 时，表示没有被删除， 该值为一个时间时，则处于软删除状态
+        comment: '删除时间',
+    })
+    deletedAt: Date;
 
     @Expose()
     @ManyToOne(() => CategoryEntity, (category) => category.posts, {

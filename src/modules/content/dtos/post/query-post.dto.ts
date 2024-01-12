@@ -8,13 +8,11 @@ import { DtoValidation } from '@/modules/core/decorators';
 import { toBoolean } from '@/modules/core/utils';
 import { PaginateOptions } from '@/modules/database/types';
 
-import { PostOrderType } from '../../constants';
+import { PostOrderType, SelectTrashMode } from '../../constants';
 
 /**
  * 文章分页查询验证
  */
-// @DtoValidation({ groups: ['query'], type: 'query' })
-// @DtoValidation({ groups: ['query'], type: 'query' })
 @DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
     @Transform(({ value }) => toBoolean(value))
@@ -47,4 +45,10 @@ export class QueryPostDto implements PaginateOptions {
     @IsUUID(undefined, { message: 'ID格式错误' })
     @IsOptional()
     tag?: string;
+
+    @IsEnum(SelectTrashMode, {
+        message: `软删除模式必须是${Object.values(SelectTrashMode).join(',')}`,
+    })
+    @IsOptional()
+    trashed?: SelectTrashMode;
 }

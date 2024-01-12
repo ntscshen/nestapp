@@ -14,7 +14,7 @@ import {
 import { paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
-import { PostOrderType } from '../constants';
+import { PostOrderType, SelectTrashMode } from '../constants';
 import { CreatePostDto, UpdatePostDto } from '../dtos';
 import { PaginateDto } from '../dtos/paginate.dto';
 import { PostEntity } from '../entities/post.entity';
@@ -64,9 +64,43 @@ export class PostService {
      * 删除文章
      * @param id
      */
-    async delete(id: string) {
-        const item = await this.repository.findOneByOrFail({ id });
-        return this.repository.remove(item);
+    async delete(ids: string[], trash?: boolean) {
+        const items = await this.repository.find({
+            where: { id: In(ids) },
+            withDeleted: true,
+        });
+        console.log('items :>> ', items);
+        if (trash) {
+            const softs = items.filter((item) => isNil(item.deletedAt)); // 没被软删除的
+            const directs = items.filter((item) => !isNil(item.deletedAt)); // 已经被软删除的
+            return [
+                ...(await this.repository.remove(directs)),
+                ...(await this.repository.softRemove(softs)),
+            ];
+        }
+        return this.repository.remove(items);
+    }
+
+    /**
+     * 恢复文章
+     * @param ids
+     * */
+    async restore(ids: string[]) {
+        const items = await this.repository.find({
+            where: { id: In(ids) } as any,
+            withDeleted: true,
+        });
+        const trasheds = items.filter((item) => !isNil(item.deletedAt)).map((item) => item.id);
+        if (trasheds.length < 1) return [];
+        await this.repository.restore(trasheds);
+        const qb = await this.buildListQuery(
+            this.postRepository.buildBaseQB(),
+            {},
+            async (qbuilder) => {
+                return qbuilder.andWhereInIds(trasheds);
+            },
+        );
+        return qb.getMany();
     }
 
     /**
@@ -153,8 +187,16 @@ export class PostService {
         options: Record<string, any>,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { orderBy, isPublished } = options;
+        const { orderBy, isPublished, trashed = SelectTrashMode.NONE } = options;
         let newQb = qb;
+        if (trashed === SelectTrashMode.ALL || trashed === SelectTrashMode.ONLY) {
+            newQb = newQb.withDeleted();
+            if (trashed === SelectTrashMode.ONLY) {
+                newQb = newQb.where({
+                    deletedAt: Not(IsNull()),
+                });
+            }
+        }
         if (typeof isPublished === 'boolean') {
             newQb = isPublished
                 ? newQb.where({
