@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsUUID, MaxLength, Min } from 'class-validator';
 
 import { toNumber } from 'lodash';
 
@@ -15,6 +15,13 @@ import { PostOrderType, SelectTrashMode } from '../../constants';
  */
 @DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
+    @MaxLength(100, {
+        always: true,
+        message: '搜索字符串长度不得超过$constraint1',
+    })
+    @IsOptional({ always: true })
+    search?: string;
+
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
     @IsOptional()

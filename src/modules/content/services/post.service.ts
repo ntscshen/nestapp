@@ -1,15 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { isArray, isFunction, isNil, omit } from 'lodash';
-import {
-    DataSource,
-    EntityNotFoundError,
-    In,
-    IsNull,
-    Not,
-    Repository,
-    SelectQueryBuilder,
-} from 'typeorm';
+import { EntityNotFoundError, In, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
 import { paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
@@ -20,27 +11,40 @@ import { PaginateDto } from '../dtos/paginate.dto';
 import { PostEntity } from '../entities/post.entity';
 import { CategoryRepository, PostRepository, TagRepository } from '../entities/repositories';
 
+import { SearchType } from '../types';
+
+import { CategoryService } from './category.service';
+
 // src/modules/content/services/post.service.ts
 @Injectable()
 export class PostService {
     constructor(
-        @InjectRepository(PostEntity)
-        protected repository: Repository<PostEntity>,
+        protected postRepository: PostRepository,
         protected categoryRepository: CategoryRepository,
+        protected categoryService: CategoryService,
         protected tagRepository: TagRepository,
-
-        private datasource: DataSource,
-        private postRepository: PostRepository,
+        protected search_type: SearchType = 'against',
     ) {}
 
     /**
+     * 查询单篇文章
+     * @param id
+     * @param callback 添加额外的查询
+     */
+    async detail(id: string, callback?: QueryHook<PostEntity>) {
+        let qb = this.postRepository.createQueryBuilder('post');
+        qb.where(`post.id = :id`, { id });
+        qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
+        const item = await qb.getOne();
+        if (!item) throw new EntityNotFoundError(PostEntity, `The post ${id} not exists!`);
+        return item;
+    }
+
+    /**
      * 创建文章
-    //  * @param data
+     * @param data
      */
     async create(data: CreatePostDto) {
-        // dto中category字段是 string
-        // 但是在Entity中定义的category是一个CategoryEntity实体
-        // 所以当你想要将值传递到CategoryEntity类型中时，需要将值转换为entity类型
         const createPostDto = {
             ...data,
             // 文章所属的分类
@@ -55,7 +59,7 @@ export class PostService {
                 : [],
             //  PostEntity 中被定义为允许 null 值。
         };
-        const item = await this.repository.save(createPostDto);
+        const item = await this.postRepository.save(createPostDto);
 
         return this.detail(item.id);
     }
@@ -65,20 +69,19 @@ export class PostService {
      * @param id
      */
     async delete(ids: string[], trash?: boolean) {
-        const items = await this.repository.find({
+        const items = await this.postRepository.find({
             where: { id: In(ids) },
             withDeleted: true,
         });
-        console.log('items :>> ', items);
         if (trash) {
             const softs = items.filter((item) => isNil(item.deletedAt)); // 没被软删除的
             const directs = items.filter((item) => !isNil(item.deletedAt)); // 已经被软删除的
             return [
-                ...(await this.repository.remove(directs)),
-                ...(await this.repository.softRemove(softs)),
+                ...(await this.postRepository.remove(directs)),
+                ...(await this.postRepository.softRemove(softs)),
             ];
         }
-        return this.repository.remove(items);
+        return this.postRepository.remove(items);
     }
 
     /**
@@ -86,13 +89,13 @@ export class PostService {
      * @param ids
      * */
     async restore(ids: string[]) {
-        const items = await this.repository.find({
+        const items = await this.postRepository.find({
             where: { id: In(ids) } as any,
             withDeleted: true,
         });
         const trasheds = items.filter((item) => !isNil(item.deletedAt)).map((item) => item.id);
         if (trasheds.length < 1) return [];
-        await this.repository.restore(trasheds);
+        await this.postRepository.restore(trasheds);
         const qb = await this.buildListQuery(
             this.postRepository.buildBaseQB(),
             {},
@@ -115,18 +118,18 @@ export class PostService {
                 ? null
                 : await this.categoryRepository.findOneByOrFail({ id: data.category });
             post.category = category;
-            this.repository.save(post, { reload: true });
+            this.postRepository.save(post, { reload: true });
         }
 
         if (isArray(data.tags)) {
             // 更新文章关联标签
-            await this.repository
+            await this.postRepository
                 .createQueryBuilder('post')
                 .relation(PostEntity, 'tags')
                 .of(post)
                 .addAndRemove(data.tags, post.tags ?? []);
         }
-        await this.repository.update(data.id, omit(data, ['id', 'tags', 'category']));
+        await this.postRepository.update(data.id, omit(data, ['id', 'tags', 'category']));
         return this.detail(data.id);
     }
 
@@ -136,44 +139,10 @@ export class PostService {
      * @param callback 添加额外的查询
      */
     async paginate(options: PaginateDto, callback?: QueryHook<PostEntity>) {
-        const queryBuilder = this.postRepository.createQueryBuilder('post');
-        // const post = await this.postRepository.findOne({
-        //     where: { id: '7b1a6bd3-e5e4-4786-876c-731ebcec55e3' },
-        // });
-        // const queryBuilder = this.repository.createQueryBuilder('post');
+        // const queryBuilder = this.postRepository.createQueryBuilder('post');
+        const queryBuilder = this.postRepository.buildBaseQB();
         const qb = await this.buildListQuery(queryBuilder, options, callback);
         return paginate(qb, options); // 这里的paginate是一个工具方法
-    }
-
-    /**
-     * 查询单篇文章
-     * @param id
-     * @param callback 添加额外的查询
-     */
-    async detail(id: string, callback?: QueryHook<PostEntity>) {
-        // let qb = this.postRepository.createQueryBuilder('post');
-        let qb = this.repository.createQueryBuilder('post');
-        // let qb = this.repository.buildBaseQB();
-        qb.where(`post.id = :id`, { id });
-        qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
-        const item = await qb.getOne();
-        if (!item) throw new EntityNotFoundError(PostEntity, `The post ${id} not exists!`);
-        return item;
-        // const result = await this.repository.findOneBy({ id });
-    }
-
-    async detail2(id: string, callback?: QueryHook<PostEntity>): Promise<PostEntity | null> {
-        // 通过 createQueryBuilder 构建查询，提供了更灵活的方式来构建和修改查询
-        // const queryBuilder = this.repository.createQueryBuilder('post');
-        const queryBuilder = this.datasource.createQueryBuilder(PostEntity, 'post');
-        // 应用callback以添加额外的查询条件或修改
-        if (callback) {
-            callback(queryBuilder);
-        }
-
-        // 完成查询并返回结果
-        const post = await queryBuilder.where('post.id = :id', { id }).getOne();
-        return post;
     }
 
     /**
@@ -187,7 +156,7 @@ export class PostService {
         options: Record<string, any>,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { orderBy, isPublished, trashed = SelectTrashMode.NONE } = options;
+        const { category, tag, orderBy, isPublished, trashed = SelectTrashMode.NONE } = options;
         let newQb = qb;
         if (trashed === SelectTrashMode.ALL || trashed === SelectTrashMode.ONLY) {
             newQb = newQb.withDeleted();
@@ -207,8 +176,50 @@ export class PostService {
                   });
         }
         newQb = this.queryOrderBy(newQb, orderBy);
+
+        if (category) await this.queryByCategory(category, qb); // 在查询结果中，如果有分类，查询出其后代分类
+        if (!isNil(options.search)) this.buildSearchQuery(qb, options.search);
+        // 查询某个标签关联的文章
+        if (tag) qb.where('tags.id = :id', { id: tag }); // 在查询结果中，如果有标签，查询出其后代标签
+
         if (callback) return callback(newQb);
         return newQb;
+    }
+
+    protected async buildSearchQuery(qb: SelectQueryBuilder<PostEntity>, search: string) {
+        console.log('search_type :>> ', this.search_type);
+        console.log('search :>> ', search);
+        if (this.search_type === 'like') {
+            qb.andWhere('title LIKE :search', { search: `%${search}%` })
+                .orWhere('body LIKE :search', { search: `%${search}%` })
+                .orWhere('summary LIKE :search', { search: `%${search}%` })
+                .orWhere('category.name LIKE :search', {
+                    search: `%${search}%`,
+                })
+                .orWhere('tags.name LIKE :search', {
+                    search: `%${search}%`,
+                });
+        } else if (this.search_type === 'against') {
+            console.log('search112233 :>> ', {
+                search: `${search}*`,
+            });
+            qb.andWhere('MATCH(title) AGAINST (:search IN BOOLEAN MODE)', {
+                search: `${search}*`,
+            })
+                .orWhere('MATCH(body) AGAINST (:search IN BOOLEAN MODE)', {
+                    search: `${search}*`,
+                })
+                .orWhere('MATCH(summary) AGAINST (:search IN BOOLEAN MODE)', {
+                    search: `${search}*`,
+                })
+                .orWhere('MATCH(category.name) AGAINST (:search IN BOOLEAN MODE)', {
+                    search: `${search}*`,
+                })
+                .orWhere('MATCH(tags.name) AGAINST (:search IN BOOLEAN MODE)', {
+                    search: `${search}*`,
+                });
+        }
+        return qb;
     }
 
     /**
@@ -233,5 +244,20 @@ export class PostService {
                     .addOrderBy('post.updatedAt', 'DESC')
                     .addOrderBy('post.publishedAt', 'DESC');
         }
+    }
+
+    /**
+     * 查询出分类及其后代分类下的所有文章的Query构建
+     * @param id
+     * @param qb
+     */
+    protected async queryByCategory(id: string, qb: SelectQueryBuilder<PostEntity>) {
+        const root = await this.categoryService.detail(id);
+        const tree = await this.categoryRepository.findDescendantsTree(root);
+        const flatDes = await this.categoryRepository.toFlatTrees(tree.children);
+        const ids = [tree.id, ...flatDes.map((item) => item.id)];
+        return qb.where('category.id IN (:...ids)', {
+            ids,
+        });
     }
 }

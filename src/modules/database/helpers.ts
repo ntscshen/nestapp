@@ -28,7 +28,6 @@ export const paginate = async <E extends ObjectLiteral>(
     const remainder = totalItems % limit !== 0 ? totalItems % limit : limit;
     const itemCount = page < totalPages ? limit : remainder;
     return {
-        items,
         meta: {
             totalItems,
             itemCount,
@@ -36,6 +35,7 @@ export const paginate = async <E extends ObjectLiteral>(
             totalPages,
             currentPage: page,
         },
+        items,
     };
 };
 

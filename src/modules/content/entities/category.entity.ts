@@ -4,6 +4,7 @@ import {
     Column,
     DeleteDateColumn,
     Entity,
+    Index,
     OneToMany,
     PrimaryColumn,
     Relation,
@@ -24,6 +25,7 @@ export class CategoryEntity extends BaseEntity {
 
     @Expose()
     @Column({ comment: '分类名称' })
+    @Index({ fulltext: true })
     name: string;
 
     // category-tree 直接查询这个分类树时候显示的字段

@@ -32,7 +32,6 @@ export class CommentController {
         @Query()
         query: QueryCommentTreeDto,
     ) {
-        console.log('🚀 ~ file: comment.controller.ts:48 ~ CommentController ~ query:', query);
         return this.service.findTrees(query);
     }
 

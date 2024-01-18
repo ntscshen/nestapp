@@ -18,8 +18,8 @@ import {
     UpdateCategoryDto,
 } from '../dtos';
 import { DeleteWithTrashDto } from '../dtos/delete-with-trash.dto';
-import { CategoryService } from '../services/category.service';
 import { RestoreDto } from '../dtos/restore.dto';
+import { CategoryService } from '../services/category.service';
 
 @Controller('categories')
 export class CategoryController {

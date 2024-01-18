@@ -39,7 +39,6 @@ export class TagController {
         @Query()
         options: QueryTagDto,
     ) {
-        console.log('🚀 ~ file: tag.controller.ts:45 ~ TagController ~ options:', options);
         return this.service.paginate(options);
     }
 

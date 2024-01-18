@@ -64,6 +64,7 @@ export class AppPipe extends ValidationPipe {
             : value;
         try {
             // 序列化并验证dto对象
+            console.log('toValidate :>> ', toValidate);
             let result = await super.transform(toValidate, metadata);
             // 如果dto类的中存在transform静态方法,则返回调用进一步transform之后的结果
             if (typeof result.transform === 'function') {
