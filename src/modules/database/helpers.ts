@@ -1,7 +1,7 @@
 import { isNil } from 'lodash';
 import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 
-import { PaginateOptions, PaginateReturn } from './types';
+import { OrderQueryType, PaginateOptions, PaginateReturn } from './types';
 
 /**
  * 分页函数
@@ -71,3 +71,28 @@ export const treePaginate = <E extends ObjectLiteral>(
         items,
     };
 };
+
+/**
+ * 为查询添加排序,默认排序规则为DESC
+ * @param qb 原查询
+ * @param alias 别名
+ * @param orderBy 查询排序
+ */
+export const getOrderByQuery = <E extends ObjectLiteral>(
+    qb: SelectQueryBuilder<E>,
+    alias: string,
+    orderBy?: OrderQueryType,
+) => {
+    if (isNil(orderBy)) return qb;
+    if (typeof orderBy === 'string') return qb.orderBy(`${alias}.${orderBy}`, 'DESC');
+    if (Array.isArray(orderBy)) {
+        orderBy.forEach((orderItem) => {
+            const orderField = typeof orderItem === 'string' ? orderItem : orderItem.name;
+            const orderDirection = typeof orderItem === 'string' ? 'DESC' : orderItem.order;
+            qb.addOrderBy(`${alias}.${orderField}`, orderDirection);
+        });
+        return qb;
+    }
+    return qb.orderBy(`${alias}.${orderBy.name}`, orderBy.order);
+};
+// 统一处理逻辑，无论 orderBy 是字符串、对象、数组，都通过 addOrder 的辅助函数来统一处理。

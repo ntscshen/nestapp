@@ -1,6 +1,8 @@
 // src/modules/database/types.ts
 import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 
+import { OrderType } from './constants';
+
 export type QueryHook<Entity> = (
     qb: SelectQueryBuilder<Entity>,
 ) => Promise<SelectQueryBuilder<Entity>>;
@@ -50,4 +52,22 @@ export interface PaginateOptions {
 export interface PaginateReturn<E extends ObjectLiteral> {
     meta: PaginateMeta;
     items: E[];
+}
+/**
+ * 排序类型,{字段名称: 排序方法}
+ * 如果多个值则传入数组即可
+ * 排序方法不设置,默认DESC
+ */
+export type OrderRule = {
+    name: string;
+    order: OrderType;
+};
+
+export type OrderQueryType = string | OrderRule | OrderRule[];
+
+export interface QueryParams<E extends ObjectLiteral> {
+    addQuery?: QueryHook<E>; // 添加额外的回调查询
+    orderBy?: OrderQueryType; // 排序
+    withTrashed?: boolean; // 是否包含软删除
+    onlyTrashed?: boolean; // 是否只包含软删除(withTrashed为true时有效)
 }
