@@ -8,9 +8,9 @@ import { PostEntity } from '../post.entity';
 export class PostRepository extends BaseRepository<PostEntity> {
     protected _qbName = 'post';
 
-    buildBaseQB() {
+    buildBaseQb() {
         // 在查询之前先查询出评论数量在添加到commentCount字段上
-        return this.buildBaseQb()
+        return this.buildBaseQB()
             .leftJoinAndSelect(`${this.qbName}.category`, 'category')
             .leftJoinAndSelect(`${this.qbName}.tags`, 'tags')
             .addSelect((subQuery) => {

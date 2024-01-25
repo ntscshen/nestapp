@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
 
-import { omit, isNil } from 'lodash';
+import { omit } from 'lodash';
 
-import { In } from 'typeorm';
-
+import { BaseService } from '@/modules/database/base/service';
 import { paginate } from '@/modules/database/helpers';
 
 import { CreateTagDto, QueryTagDto, UpdateTagDto } from '../dtos';
+import { TagEntity } from '../entities';
 import { TagRepository } from '../entities/repositories/tag.repository';
 
 @Injectable()
-export class TagService {
-    constructor(protected repository: TagRepository) {}
+export class TagService extends BaseService<TagEntity, TagRepository> {
+    protected enableTrash: boolean = true;
+
+    constructor(protected repository: TagRepository) {
+        super(repository);
+    }
 
     /**
      * 查询单个标签信息
@@ -19,7 +23,7 @@ export class TagService {
      * @param callback 添加额外的查询
      */
     async detail(id: string) {
-        const qb = this.repository.buildBaseQB();
+        const qb = this.repository.buildBaseQueryBuilder();
         qb.where(`tag.id = :id`, { id });
         return qb.getOneOrFail();
     }
@@ -48,39 +52,7 @@ export class TagService {
      * @param callback 添加额外的查询
      */
     async paginate(options: QueryTagDto) {
-        const qb = this.repository.buildBaseQB();
+        const qb = this.repository.buildBaseQueryBuilder();
         return paginate(qb, options);
-    }
-
-    /**
-     * 删除标签
-     * @param id
-     */
-    async delete(ids: string[], trash?: boolean) {
-        const items = await this.repository.find({
-            where: { id: In(ids) } as any,
-            withDeleted: true,
-        });
-        if (trash) {
-            const softs = items.filter((item) => isNil(item.deletedAt));
-            const directs = items.filter((item) => !isNil(item.deletedAt));
-            return [
-                ...(await this.repository.softRemove(softs)),
-                ...(await this.repository.remove(directs)),
-            ];
-        }
-        return this.repository.remove(items);
-    }
-
-    async restore(ids: string[]) {
-        const items = await this.repository.find({
-            where: { id: In(ids) } as any,
-            withDeleted: true,
-        });
-        const trasheds = items.filter((item) => !isNil(item)).map((item) => item.id);
-        if (trasheds.length < 1) return [];
-        await this.repository.restore(trasheds);
-        const qb = this.repository.buildBaseQB().where({ id: In(trasheds) });
-        return qb.getMany();
     }
 }

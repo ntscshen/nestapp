@@ -1,5 +1,7 @@
 // src/modules/database/types.ts
-import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { FindTreeOptions, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+
+import { SelectTrashMode } from '../content/constants';
 
 import { OrderType } from './constants';
 
@@ -71,3 +73,21 @@ export interface QueryParams<E extends ObjectLiteral> {
     withTrashed?: boolean; // 是否包含软删除
     onlyTrashed?: boolean; // 是否只包含软删除(withTrashed为true时有效)
 }
+
+// 带软删除的服务类数据列表查询类型
+export type ServiceListQueryOptionWithTrashed<E extends ObjectLiteral> = Omit<
+    FindTreeOptions & QueryParams<E>,
+    'withTrashed'
+> & {
+    trashed?: `${SelectTrashMode}`;
+} & Record<string, any>;
+
+// 不带软删除的服务类数据列表查询类型
+export type ServiceListQueryOptionNotWithTrashed<E extends ObjectLiteral> = Omit<
+    ServiceListQueryOptionWithTrashed<E>,
+    'trashed'
+>;
+// 服务类数据列表查询类型
+export type ServiceListQueryOption<E extends ObjectLiteral> =
+    | ServiceListQueryOptionWithTrashed<E>
+    | ServiceListQueryOptionNotWithTrashed<E>;

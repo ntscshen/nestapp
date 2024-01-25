@@ -24,13 +24,13 @@ export class BaseTreeRepository<E extends ObjectLiteral> extends TreeRepository<
     protected _childrenResolve?: TreeChildrenResolve;
 
     // 默认排序规则，可以通方法的orderBy参数覆盖
-    protected _orderBy?: OrderQueryType;
+    protected orderBy?: OrderQueryType;
 
     /**
      * 返回查询器名称
      */
     get qbName(): string {
-        return this.qbName;
+        return this._qbName;
     }
 
     /**
@@ -54,7 +54,7 @@ export class BaseTreeRepository<E extends ObjectLiteral> extends TreeRepository<
      * @param orderBy
      * */
     addOrderByQuery(qb: SelectQueryBuilder<E>, orderBy?: OrderQueryType): SelectQueryBuilder<E> {
-        const orderByQuery = orderBy ?? this._orderBy;
+        const orderByQuery = orderBy ?? this.orderBy;
         return isNil(orderByQuery) ? qb : getOrderByQuery(qb, this.qbName, orderByQuery);
     }
 
@@ -244,7 +244,7 @@ export class BaseTreeRepository<E extends ObjectLiteral> extends TreeRepository<
      * @param trees
      * @param level
      */
-    async toFlatTrees(trees: E[], depth = 0, parent: E | null = null): Promise<E[]> {
+    async toFlatTrees1(trees: E[], depth = 0, parent: E | null = null): Promise<E[]> {
         const data: Omit<E, 'children'>[] = [];
         for (const item of trees) {
             (item as any).depth = depth;
@@ -257,11 +257,7 @@ export class BaseTreeRepository<E extends ObjectLiteral> extends TreeRepository<
         return data as E[];
     }
 
-    async toFlatTrees2(
-        trees: E[],
-        depth = 0,
-        parent: E | null = null,
-    ): Promise<Omit<E, 'children'>[]> {
+    async toFlatTrees(trees: E[], depth = 0, parent: E | null = null): Promise<E[]> {
         let data: Omit<E, 'children'>[] = [];
 
         for (const item of trees) {
@@ -280,9 +276,9 @@ export class BaseTreeRepository<E extends ObjectLiteral> extends TreeRepository<
 
             // 如果存在 children，则递归处理
             if (children && children.length) {
-                data = data.concat(await this.toFlatTrees2(children, depth + 1, item));
+                data = data.concat(await this.toFlatTrees(children, depth + 1, item));
             }
         }
-        return data;
+        return data as E[];
     }
 }

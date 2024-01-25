@@ -23,7 +23,7 @@ export abstract class BaseRepository<E extends ObjectLiteral> extends Repository
     /**
      * 构建基础查询器
      */
-    buildBaseQb(): SelectQueryBuilder<E> {
+    buildBaseQB(): SelectQueryBuilder<E> {
         // 在抽象类中使用 this 时，它具体指向的是继承了这个抽象类并被实例化的子类的实例。
         // 一个抽象类，它本身不能被实例化，因此 this 实际上指向的是一个继承了 BaseRepository 的子类的实例。
         return this.createQueryBuilder(this.qbName);

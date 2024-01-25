@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { isArray, isFunction, isNil, omit } from 'lodash';
 import { EntityNotFoundError, In, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
+import { BaseService } from '@/modules/database/base/service';
 import { paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
 import { PostOrderType, SelectTrashMode } from '../constants';
-import { CreatePostDto, UpdatePostDto } from '../dtos';
+import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PaginateDto } from '../dtos/paginate.dto';
 import { PostEntity } from '../entities/post.entity';
 import { CategoryRepository, PostRepository, TagRepository } from '../entities/repositories';
@@ -15,16 +16,25 @@ import { SearchType } from '../types';
 
 import { CategoryService } from './category.service';
 
+// 文章查询接口
+type FindParams = {
+    [key in keyof Omit<QueryPostDto, 'limit' | 'page'>]: QueryPostDto[key];
+};
+
 // src/modules/content/services/post.service.ts
 @Injectable()
-export class PostService {
+export class PostService extends BaseService<PostEntity, PostRepository, FindParams> {
+    protected enableTrash = true;
+
     constructor(
         protected postRepository: PostRepository,
         protected categoryRepository: CategoryRepository,
         protected categoryService: CategoryService,
         protected tagRepository: TagRepository,
         protected search_type: SearchType = 'against',
-    ) {}
+    ) {
+        super(postRepository);
+    }
 
     /**
      * 查询单篇文章
