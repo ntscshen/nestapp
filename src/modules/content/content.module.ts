@@ -1,29 +1,27 @@
-import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common';
+import { Module, ModuleMetadata } from '@nestjs/common';
 
-import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { Configure } from '../config/configure';
 import { DatabaseModule } from '../database/database.module';
+
+import { addEntities, addSubscribers } from '../database/helpers';
 
 import * as controllers from './controllers';
 import * as entities from './entities';
 import * as repositories from './entities/repositories';
+import { defaultContentConfig } from './helpers';
 import * as services from './services';
 import { PostService } from './services/post.service';
 import { SanitizeService } from './services/sanitize.service';
-import { PostSubscriber } from './subscribers';
+import * as subscribers from './subscribers';
 import { ContentConfig } from './types';
 
 @Module({})
 export class ContentModule {
-    static forRoot(configRegister?: () => ContentConfig): DynamicModule {
-        const config: Required<ContentConfig> = {
-            searchType: 'against',
-            ...(configRegister ? configRegister() : {}),
-        };
+    static async forRoot(configure: Configure) {
+        const config = await configure.get<ContentConfig>('content', defaultContentConfig);
         const providers: ModuleMetadata['providers'] = [
             ...Object.values(services),
-            SanitizeService,
-            PostSubscriber,
+            ...(await addSubscribers(configure, Object.values(subscribers))),
             {
                 provide: PostService,
                 inject: [
@@ -48,14 +46,32 @@ export class ContentModule {
                 },
             },
         ];
+        if (config.htmlEnabled) providers.push(SanitizeService);
+        // console.log('object :>> ', addEntities(configure, Object.values(entities)));
         return {
             module: ContentModule,
             imports: [
-                TypeOrmModule.forFeature(Object.values(entities)),
+                // TypeOrmModule.forFeature(Object.values(entities)),
+                addEntities(configure, Object.values(entities)),
                 DatabaseModule.forRepository(Object.values(repositories)),
             ],
             controllers: Object.values(controllers),
             providers,
+            exports: [
+                ...Object.values(services),
+                PostService,
+                DatabaseModule.forRepository(Object.values(repositories)),
+            ],
         };
     }
 }
+
+// return {
+//     module: ContentModule,
+//     imports: [
+//         TypeOrmModule.forFeature(Object.values(entities)),
+//         DatabaseModule.forRepository(Object.values(repositories)),
+//     ],
+//     controllers: Object.values(controllers),
+//     providers,
+// };

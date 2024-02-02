@@ -1,8 +1,17 @@
 // src/modules/database/types.ts
-import { FindTreeOptions, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import {
+    FindTreeOptions,
+    ObjectLiteral,
+    Repository,
+    SelectQueryBuilder,
+    TreeRepository,
+} from 'typeorm';
 
 import { SelectTrashMode } from '../content/constants';
 
+import { BaseRepository } from './base/repository';
+import { BaseTreeRepository } from './base/tree.repository';
 import { OrderType } from './constants';
 
 export type QueryHook<Entity> = (
@@ -91,3 +100,34 @@ export type ServiceListQueryOptionNotWithTrashed<E extends ObjectLiteral> = Omit
 export type ServiceListQueryOption<E extends ObjectLiteral> =
     | ServiceListQueryOptionWithTrashed<E>
     | ServiceListQueryOptionNotWithTrashed<E>;
+
+/**
+ * 自定义数据库配置
+ * */
+export type DbConfig = {
+    common: Record<string, any>;
+    connections: Array<TypeOrmModuleOptions>;
+};
+/**
+ * Typeorm连接配置
+ * */
+export type TypeormOption = Omit<TypeOrmModuleOptions, 'name' | 'migrations'> & {
+    name: string;
+};
+
+/**
+ * 最终数据库配置
+ */
+export type DbOptions = Record<string, any> & {
+    common: Record<string, any>;
+    connections: TypeormOption[];
+};
+
+/**
+ * Repository类型
+ */
+export type RepositoryType<E extends ObjectLiteral> =
+    | Repository<E>
+    | TreeRepository<E>
+    | BaseRepository<E>
+    | BaseTreeRepository<E>;

@@ -1,6 +1,8 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-export const database = (): TypeOrmModuleOptions => ({
+import { createDbConfig } from '@/modules/database/helpers';
+
+export const database2 = (): TypeOrmModuleOptions => ({
     charset: 'utf8mb4',
     logging: ['error'],
     type: 'mysql',
@@ -13,3 +15,21 @@ export const database = (): TypeOrmModuleOptions => ({
     synchronize: true,
     autoLoadEntities: true,
 });
+
+export const database = createDbConfig((configure) => ({
+    common: {
+        synchronize: true,
+    },
+    connections: [
+        {
+            type: 'mysql',
+            host: '127.0.0.1',
+            port: 3306,
+            username: 'root',
+            password: '123456',
+            database: '3r2',
+            charset: 'utf8mb4',
+            logging: ['error'],
+        },
+    ],
+}));

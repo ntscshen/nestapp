@@ -1,7 +1,31 @@
+import { Type } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { isNil } from 'lodash';
-import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import {
+    DataSource,
+    EntitySubscriberInterface,
+    ObjectLiteral,
+    ObjectType,
+    Repository,
+    SelectQueryBuilder,
+} from 'typeorm';
 
-import { OrderQueryType, PaginateOptions, PaginateReturn } from './types';
+import { Configure } from '../config/configure';
+import { createConnectionOptions } from '../config/helpers';
+import { ConfigureFactory, ConfigureRegister } from '../config/types';
+
+import { deepMerge } from '../core/utils';
+
+import { CUSTOM_REPOSITORY_METADATA } from './constants';
+import {
+    DbConfig,
+    DbOptions,
+    OrderQueryType,
+    PaginateOptions,
+    PaginateReturn,
+    TypeormOption,
+} from './types';
 
 /**
  * 分页函数
@@ -96,3 +120,134 @@ export const getOrderByQuery = <E extends ObjectLiteral>(
     return qb.orderBy(`${alias}.${orderBy.name}`, orderBy.order);
 };
 // 统一处理逻辑，无论 orderBy 是字符串、对象、数组，都通过 addOrder 的辅助函数来统一处理。
+
+/**
+ * 数据库配置构造器创建
+ * */
+export const createDbConfig: (
+    register: ConfigureRegister<RePartial<DbConfig>>, // 用于注册或提供数据库配置
+) => ConfigureFactory<DbConfig, DbOptions> = (register) => ({
+    register,
+    hook: (configure, value) => createDbOptions(value),
+    defaultRegister: () => ({
+        common: {
+            charset: 'utf8mb4',
+            logging: ['error'],
+        },
+        connections: [],
+    }),
+});
+/**
+ * 创建数据库配置
+ * @param options 自定义配置
+ */
+export const createDbOptions = (options: DbConfig) => {
+    const newOptions: DbOptions = {
+        common: deepMerge(
+            {
+                charset: 'utf8mb4',
+                logging: ['error'],
+            },
+            options.common ?? {},
+            'replace',
+        ),
+        connections: createConnectionOptions(options.connections ?? []),
+    };
+    newOptions.connections = newOptions.connections.map((connection) => {
+        const entities = connection.entities ?? [];
+        const newOption = { ...connection, entities };
+        return deepMerge(
+            newOptions.common,
+            {
+                ...newOption,
+                autoLoadEntities: true,
+            } as any,
+            'replace',
+        ) as TypeormOption;
+    });
+    return newOptions;
+};
+
+/**
+ * 在模块上注册entity
+ * @param configure 配置类实例
+ * @param entities entity列表
+ * @param dataSource 数据库连接名称，默认为default
+ * */
+export const addEntities = async (
+    configure: Configure,
+    entities: EntityClassOrSchema[] = [],
+    dataSource = 'default',
+) => {
+    const database = await configure.get<DbOptions>('database');
+    if (isNil(database)) throw new Error(`Typeorm have not any config!`);
+    const dbConfig = database.connections.find((item) => item.name === dataSource);
+    if (isNil(dbConfig)) throw new Error(`Database connection named ${dataSource} not exists!`);
+    const oldEntities = (dbConfig.entities ?? []) as ObjectLiteral[];
+
+    /**
+     * 更新数据库配置，添加上新的模型
+     * */
+    configure.set(
+        'database.connections',
+        database.connections.map((connection) => {
+            return connection.name === dataSource
+                ? {
+                      ...connection,
+                      entities: [...entities, ...oldEntities],
+                  }
+                : connection;
+        }),
+    );
+    return TypeOrmModule.forFeature(entities, dataSource);
+};
+
+/**
+ * 在模块上注册订阅者
+ * @param configure 配置类实例
+ * @param subscribers 订阅者列表
+ * @param dataSource 数据库连接名称，默认为default
+ * */
+export const addSubscribers = async (
+    configure: Configure,
+    subscribers: Type<any>[] = [],
+    dataSource = 'default',
+) => {
+    const database = await configure.get<DbOptions>('database');
+    if (isNil(database)) throw new Error(`Typeorm have not any config!`);
+    const dbConfig = database.connections.find((item) => item.name === dataSource);
+    if (isNil(dbConfig)) throw new Error(`Database connection named ${dataSource} not exists!`);
+    const oldSubscribers = (dbConfig.subscribers ?? []) as EntitySubscriberInterface<any>[];
+
+    /**
+     * 更新数据库配置，添加上新的订阅者
+     * */
+    configure.set(
+        'database.connections',
+        database.connections.map((connection) => {
+            return connection.name === dataSource
+                ? {
+                      ...connection,
+                      subscribers: [...oldSubscribers, ...subscribers],
+                  }
+                : connection;
+        }),
+    );
+    return subscribers;
+};
+
+/**
+ * 获取自定义Repository的实例
+ * @param dataSource 数据连接池
+ * @param Repo repository类
+ */
+export const getCustomRepository = <T extends Repository<E>, E extends ObjectLiteral>(
+    dataSource: DataSource,
+    Repo: ClassType<T>,
+): T => {
+    if (isNil(Repo)) return null;
+    const entity = Reflect.getMetadata(CUSTOM_REPOSITORY_METADATA, Repo);
+    if (!entity) return null;
+    const base = dataSource.getRepository<ObjectType<any>>(entity);
+    return new Repo(base.target, base.manager, base.queryRunner) as T;
+};

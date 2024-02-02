@@ -1,7 +1,16 @@
 // 深度合并对象
-
+import { Global, Module, ModuleMetadata, Type } from '@nestjs/common';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import deepmerge from 'deepmerge';
-import { isNil } from 'lodash';
+import { isNil, omit } from 'lodash';
+
+import { ConfigModule } from '../config/config.module';
+import { Configure } from '../config/configure';
+import { CreateOptions } from '../config/types';
+
+import { CoreModule } from './core.module';
+import { AppFilter, AppInterceptor, AppPipe } from './providers';
+import { PanicOption } from './types';
 /**
  * 用于请求验证中的boolean数据转义
  * @param value
@@ -34,3 +43,128 @@ export const deepMerge = <T1, T2>(
 };
 
 // destinationArray目的地, sourceArray源, options
+
+// 判断一个函数是否为异步函数
+export function isAsyncFn<R, A extends Array<any>>(
+    callback: (...asgs: A) => Promise<R> | R,
+): callback is (...asgs: A) => Promise<R> {
+    const AsyncFunction = (async () => {}).constructor;
+    return callback instanceof AsyncFunction === true;
+}
+
+type MetadataFunction = () => ModuleMetadata;
+function defaultMetadataFunction(): ModuleMetadata {
+    return {};
+}
+
+// src/modules/core/helpers/app.ts
+export async function createBootModule(
+    configure: Configure,
+    options: Pick<CreateOptions, 'globals' | 'modules'>,
+): Promise<Type<any>> {
+    const { globals = {} } = options;
+    // 获取需要导入的模块
+    const modules = await options.modules(configure);
+    const imports: ModuleMetadata['imports'] = (
+        await Promise.all([
+            ...modules,
+            ConfigModule.forRoot(configure),
+            await CoreModule.forRoot(configure),
+        ])
+    ).map((item) => {
+        if ('module' in item) {
+            const meta = omit(item, ['module', 'global']);
+            Module(meta)(item.module);
+            if (item.global) Global()(item.module);
+            return item.module;
+        }
+        return item;
+    });
+    console.log('🚀 ~ imports:', imports[0]);
+    // 配置全局提供者
+    const providers: ModuleMetadata['providers'] = [];
+    if (globals.pipe !== null) {
+        const pipe = globals.pipe
+            ? globals.pipe(configure)
+            : new AppPipe({
+                  transform: true,
+                  whitelist: true,
+                  forbidNonWhitelisted: true,
+                  forbidUnknownValues: true,
+                  validationError: { target: false },
+              });
+        providers.push({
+            provide: APP_PIPE,
+            useValue: pipe,
+        });
+    }
+    if (globals.interceptor !== null) {
+        providers.push({
+            provide: APP_INTERCEPTOR,
+            useClass: globals.interceptor ?? AppInterceptor,
+        });
+    }
+    if (globals.filter !== null) {
+        providers.push({
+            provide: APP_FILTER,
+            useClass: AppFilter,
+        });
+    }
+
+    return CreateModule('BootModule', () => {
+        const meta: ModuleMetadata = {
+            imports,
+            providers,
+            controllers: [],
+        };
+        return meta;
+    });
+}
+// 创建一个动态模块
+export function CreateModule(
+    target: string | Type<any>,
+    // metaSetter: () => ModuleMetadata = () => ({}),
+    metaSetter: MetadataFunction = defaultMetadataFunction,
+): Type<any> {
+    let ModuleClass: Type<any>;
+    if (typeof target === 'string') {
+        ModuleClass = class {};
+        Object.defineProperty(ModuleClass, 'name', {
+            value: target,
+        });
+    } else {
+        ModuleClass = target;
+    }
+    Module(metaSetter())(ModuleClass);
+    return ModuleClass;
+}
+
+/**
+ * 输出命令行错误消息
+ * @param option
+ */
+export async function panic(option: PanicOption | string) {
+    console.log('输出命令行错误消息');
+    const chalk = (await import('chalk')).default;
+    if (typeof option === 'string') {
+        console.log(chalk.red(`\n❌ ${option}`));
+        process.exit(1);
+    }
+    const { error, message, exit = true } = option;
+    !isNil(error) ? console.log(chalk.red(error)) : console.log(chalk.red(`\n❌ ${message}`));
+    if (exit) process.exit(1);
+}
+/**
+ * 生成一个指定长度的随机字符串
+ * (使用了英文字母（大写和小写）作为字符来源)
+ * @param length 长度
+ * */
+export const getRandomCharString = (length: number) => {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+};

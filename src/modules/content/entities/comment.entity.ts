@@ -1,35 +1,23 @@
 import { Exclude, Expose } from 'class-transformer';
-import {
-    BaseEntity,
-    Column,
-    CreateDateColumn,
-    Entity,
-    Index,
-    ManyToOne,
-    PrimaryColumn,
-    Relation,
-    Tree,
-    TreeChildren,
-    TreeParent,
-} from 'typeorm';
+import * as typeorm from 'typeorm';
 
 import { PostEntity } from './post.entity';
 
 @Exclude()
-@Tree('materialized-path')
-@Entity('content_comments')
-export class CommentEntity extends BaseEntity {
+@typeorm.Tree('materialized-path')
+@typeorm.Entity('content_comments')
+export class CommentEntity extends typeorm.BaseEntity {
     @Expose()
-    @PrimaryColumn({ type: 'varchar', generated: 'uuid', length: 36 })
+    @typeorm.PrimaryColumn({ type: 'varchar', generated: 'uuid', length: 36 })
     id: string;
 
     @Expose()
-    @Column({ type: 'text', comment: '评论内容' })
-    @Index({ fulltext: true })
+    @typeorm.Column({ type: 'text', comment: '评论内容' })
+    @typeorm.Index({ fulltext: true })
     body: string;
 
     @Expose()
-    @CreateDateColumn({
+    @typeorm.CreateDateColumn({
         comment: '创建时间',
     })
     createdAt: Date;
@@ -38,17 +26,17 @@ export class CommentEntity extends BaseEntity {
     depth = 0;
 
     @Expose({ groups: ['comment-list', 'comment-detail'] })
-    @TreeParent({ onDelete: 'NO ACTION' })
-    parent: Relation<CommentEntity> | null;
+    @typeorm.TreeParent({ onDelete: 'NO ACTION' })
+    parent: typeorm.Relation<CommentEntity> | null;
 
     @Expose({ groups: ['comment-tree'] })
-    @TreeChildren({ cascade: true })
-    children: Relation<CommentEntity>[];
+    @typeorm.TreeChildren({ cascade: true })
+    children: typeorm.Relation<CommentEntity>[];
 
-    @ManyToOne(() => PostEntity, (post) => post.comments, {
+    @typeorm.ManyToOne(() => PostEntity, (post) => post.comments, {
         nullable: false, // 文章不能为空
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
     })
-    post: Relation<PostEntity>;
+    post: typeorm.Relation<PostEntity>;
 }

@@ -1,10 +1,13 @@
-import { DynamicModule, Module, Provider, Type } from '@nestjs/common';
+import { DynamicModule, Module, ModuleMetadata, Provider, Type } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions, getDataSourceToken } from '@nestjs/typeorm';
 import { DataSource, ObjectType } from 'typeorm';
 
+import { Configure } from '../config/configure';
 import { PostEntity } from '../content/entities/post.entity';
 
 import { PostSubscriber } from '../content/subscribers';
+
+import { panic } from '../core/utils';
 
 import { CUSTOM_REPOSITORY_METADATA } from './constants';
 import { DataExistConstraint } from './constraints/data.exist.constraint';
@@ -14,10 +17,11 @@ import {
     UniqueExistConstraint,
     UniqueTreeExistConstraint,
 } from './constraints/unique.exist.constraint';
+import { DbOptions } from './types';
 
 @Module({})
 export class DatabaseModule {
-    static forRoot(configRegister: () => TypeOrmModuleOptions): DynamicModule {
+    static forRoot_old(configRegister: () => TypeOrmModuleOptions): DynamicModule {
         return {
             global: true,
             module: DatabaseModule,
@@ -31,6 +35,31 @@ export class DatabaseModule {
                 UniqueTreeConstraint,
                 UniqueTreeExistConstraint,
             ],
+        };
+    }
+
+    static async forRoot(configure: Configure) {
+        if (!configure.has('database')) {
+            panic({ message: 'Database config not exists or not right!' });
+        }
+        const { connections } = await configure.get<DbOptions>('database'); // 获取数据库配置
+
+        const imports: ModuleMetadata['imports'] = [];
+        for (const dbOption of connections) {
+            imports.push(TypeOrmModule.forRoot(dbOption as TypeOrmModuleOptions));
+        }
+        const providers: ModuleMetadata['providers'] = [
+            DataExistConstraint,
+            UniqueConstraint,
+            UniqueExistConstraint,
+            UniqueTreeConstraint,
+            UniqueTreeExistConstraint,
+        ];
+        return {
+            global: true,
+            module: DatabaseModule,
+            imports,
+            providers,
         };
     }
 

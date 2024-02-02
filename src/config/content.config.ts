@@ -4,5 +4,6 @@ export const content = (): ContentConfig => {
     return {
         searchType: 'against',
         // searchType: 'like',
+        htmlEnabled: false,
     };
 };

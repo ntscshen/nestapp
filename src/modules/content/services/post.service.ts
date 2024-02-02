@@ -12,7 +12,7 @@ import { PaginateDto } from '../dtos/paginate.dto';
 import { PostEntity } from '../entities/post.entity';
 import { CategoryRepository, PostRepository, TagRepository } from '../entities/repositories';
 
-import { SearchType } from '../types';
+import * as types from '../types';
 
 import { CategoryService } from './category.service';
 
@@ -31,7 +31,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         protected categoryRepository: CategoryRepository,
         protected categoryService: CategoryService,
         protected tagRepository: TagRepository,
-        protected search_type: SearchType = 'against',
+        protected search_type: types.SearchType = 'against',
     ) {
         super(postRepository);
     }
