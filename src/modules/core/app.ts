@@ -19,13 +19,15 @@ export const app: App = { configure: new Configure() };
  */
 export const createApp = (options: CreateOptions) => async (): Promise<App> => {
     const { config, builder } = options;
+
     // 初始化配置实例
-    await app.configure.initilize(config.factories, config.storage);
+    await app.configure.initialize(config.factories, config.storage);
+    console.log('config.factories :>> ', app.configure);
     // 如果没有app配置则使用默认配置
     if (!app.configure.has('app')) {
         throw new BadGatewayException('App config not exists!');
     }
-    // console.log('1111 :>> ', app.configure.all());
+
     // 创建启动模块
     const BootModule = await createBootModule(app.configure, options);
     // 创建app的容器实例

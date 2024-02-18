@@ -10,8 +10,8 @@ import { DatabaseModule } from './modules/database/database.module';
 export const WEBAPP = 'web';
 export const createData: CreateOptions = {
     config: {
-        factories: configs as any,
-        storage: { enabled: true },
+        factories: configs as any, // 配置入口
+        storage: { enabled: true }, // 存储配置选项
     },
     modules: async (configure) => [
         ContentModule.forRoot(configure),

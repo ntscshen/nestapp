@@ -56,7 +56,7 @@ export class Env {
         }
         // 过滤掉undefined,把找到的环境变量文件放入envFiles数组
         const envFiles = search.filter((file) => file !== undefined) as string[];
-        // 转义每个环境变量文件中的内容为一个对象并让前者覆盖合并后者
+        // 转义每个环境变量文件中的内容
         // 如.env.{环境变量文件}会覆盖合并.env
         // 然后,得到所有文件中配置的环境变量对象
         const fileEnvs = envFiles

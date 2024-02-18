@@ -52,7 +52,7 @@ export class Configure {
      * @param configs 配置构造器集合对象
      * @param option 配置类选项
      */
-    async initilize(configs: Record<string, any> = {}, option: ConfigStorageOption = {}) {
+    async initialize(configs: Record<string, any> = {}, option: ConfigStorageOption = {}) {
         if (this.inited) return this;
         this._env = new Env();
         await this._env.load();
@@ -167,8 +167,9 @@ export class Configure {
      * 添加一个配置构造器后需用使用此方法同步到配置中
      */
     async sync(name?: string) {
-        if (!isNil(name)) await this.syncFactory(name);
-        else {
+        if (!isNil(name)) {
+            await this.syncFactory(name);
+        } else {
             for (const key in this.factories) {
                 await this.syncFactory(key);
             }

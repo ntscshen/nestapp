@@ -12,7 +12,7 @@ describe('AppController (e2e)', () => {
 
     beforeEach(async () => {
         const configure = new Configure();
-        configure.initilize(createData.config.factories, createData.config.storage);
+        configure.initialize(createData.config.factories, createData.config.storage);
         const BootModule = await createBootModule(configure, {
             modules: createData.modules,
         });
