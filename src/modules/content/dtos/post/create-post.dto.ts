@@ -20,6 +20,9 @@ import { DtoValidation } from '@/modules/core/decorators';
  */
 @DtoValidation({ groups: ['create'] })
 export class CreatePostDto {
+    /**
+     * 文章标题
+     */
     @MaxLength(255, {
         always: true,
         message: '文章标题长度最大为$constraint1',
@@ -28,10 +31,16 @@ export class CreatePostDto {
     @IsOptional({ groups: ['update'] })
     title: string;
 
+    /**
+     * 文章内容
+     */
     @IsNotEmpty({ groups: ['create'], message: '文章内容必须填写' })
     @IsOptional({ groups: ['update'] })
     body: string;
 
+    /**
+     * 文章描述
+     */
     @MaxLength(500, {
         always: true,
         message: '文章描述长度最大为$constraint1',
@@ -39,12 +48,18 @@ export class CreatePostDto {
     @IsOptional({ always: true })
     summary?: string;
 
+    /**
+     * 是否发布(发布时间)
+     */
     @IsDateString({ strict: true }, { always: true })
     @IsOptional({ always: true })
     @ValidateIf((value) => !isNil(value.publishedAt))
     @Transform(({ value }) => (value === 'null' ? null : value))
     publishedAt?: Date;
 
+    /**
+     * SEO关键字
+     */
     @MaxLength(20, {
         each: true,
         always: true,
@@ -53,12 +68,18 @@ export class CreatePostDto {
     @IsOptional({ always: true })
     keywords?: string[];
 
+    /**
+     * 自定义排序
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(0, { always: true, message: '排序值必须大于0' })
     @IsNumber(undefined, { always: true })
     @IsOptional({ always: true })
     customOrder = 0;
 
+    /**
+     * 所属分类ID
+     */
     @IsUUID(undefined, {
         each: true,
         always: true,
@@ -67,6 +88,9 @@ export class CreatePostDto {
     @IsOptional({ groups: ['update'] })
     category: string;
 
+    /**
+     * 关联标签ID
+     */
     @IsUUID(undefined, {
         each: true,
         always: true,

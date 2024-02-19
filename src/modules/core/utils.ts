@@ -1,6 +1,8 @@
 // 深度合并对象
 import { Global, Module, ModuleMetadata, Type } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { NestFastifyApplication } from '@nestjs/platform-fastify';
+import chalk from 'chalk';
 import deepmerge from 'deepmerge';
 import { isNil, omit } from 'lodash';
 
@@ -8,9 +10,14 @@ import { ConfigModule } from '../config/config.module';
 import { Configure } from '../config/configure';
 import { CreateOptions } from '../config/types';
 
+import { Restful } from '../restful/restful';
+
+import { APIDocOption } from '../restful/types';
+
 import { CoreModule } from './core.module';
 import { AppFilter, AppInterceptor, AppPipe } from './providers';
 import { PanicOption } from './types';
+
 /**
  * 用于请求验证中的boolean数据转义
  * @param value
@@ -64,7 +71,7 @@ export async function createBootModule(
 ): Promise<Type<any>> {
     const { globals = {} } = options;
     // 获取需要导入的模块
-    console.log('configure :>> ', configure);
+    // console.log('configure :>> ', configure);
 
     /** 就是create中的modules属性，执行之后的返回值就是两个动态模块
     modules: async (configure) => [
@@ -74,7 +81,6 @@ export async function createBootModule(
      * */
     const modules = await options.modules(configure);
 
-    console.log('🚀 ~ modules:', modules);
     const imports: ModuleMetadata['imports'] = (
         await Promise.all([
             ...modules,
@@ -153,7 +159,6 @@ export function CreateModule(
  */
 export async function panic(option: PanicOption | string) {
     console.log('输出命令行错误消息');
-    const chalk = (await import('chalk')).default;
     if (typeof option === 'string') {
         console.log(chalk.red(`\n❌ ${option}`));
         process.exit(1);
@@ -176,3 +181,55 @@ export const getRandomCharString = (length: number) => {
     }
     return result;
 };
+/**
+ * 输出API和DOC地址
+ * @param factory
+ */
+export async function echoApi(configure: Configure, container: NestFastifyApplication) {
+    const appUrl = await configure.get<string>('app.url');
+    // 设置应用的API前缀,如果没有则与appUrl相同
+    const urlPrefix = await configure.get('app.prefix', undefined);
+    const apiUrl = !isNil(urlPrefix)
+        ? `${appUrl}${urlPrefix.length > 0 ? `/${urlPrefix}` : urlPrefix}`
+        : appUrl;
+    console.log(`- RestAPI: ${chalk.green.underline(apiUrl)}`);
+    console.log('- RestDocs:');
+    const factory = container.get(Restful);
+    const { default: defaultDoc, ...docs } = factory.docs;
+    await echoApiDocs('default', defaultDoc, appUrl);
+    for (const [name, doc] of Object.entries(docs)) {
+        console.log();
+        echoApiDocs(name, doc, appUrl);
+    }
+}
+
+/**
+ * 输出一个版本的API和DOC地址
+ * @param name
+ * @param doc
+ * @param appUrl
+ */
+async function echoApiDocs(name: string, doc: APIDocOption, appUrl: string) {
+    const getDocPath = (dpath: string) => `${appUrl}/${dpath}`;
+    if (!doc.routes && doc.default) {
+        console.log(
+            `    [${chalk.blue(name.toUpperCase())}]: ${chalk.green.underline(
+                getDocPath(doc.default.path),
+            )}`,
+        );
+        return;
+    }
+    console.log(`    [${chalk.blue(name.toUpperCase())}]:`);
+    if (doc.default) {
+        console.log(`      default: ${chalk.green.underline(getDocPath(doc.default.path))}`);
+    }
+    if (doc.routes) {
+        Object.entries(doc.routes).forEach(([_routeName, rdocs]) => {
+            console.log(
+                `      <${chalk.yellowBright.bold(rdocs.title)}>: ${chalk.green.underline(
+                    getDocPath(rdocs.path),
+                )}`,
+            );
+        });
+    }
+}

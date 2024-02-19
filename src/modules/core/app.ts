@@ -22,7 +22,7 @@ export const createApp = (options: CreateOptions) => async (): Promise<App> => {
 
     // 初始化配置实例
     await app.configure.initialize(config.factories, config.storage);
-    console.log('config.factories :>> ', app.configure);
+    // console.log('config.factories :>> ', app.configure);
     // 如果没有app配置则使用默认配置
     if (!app.configure.has('app')) {
         throw new BadGatewayException('App config not exists!');
@@ -36,10 +36,9 @@ export const createApp = (options: CreateOptions) => async (): Promise<App> => {
         BootModule,
     });
     // 设置api前缀
-    if (app.configure.has('app.prefix')) {
-        // 设置全局访问前缀
-        app.container.setGlobalPrefix(await app.configure.get<string>('app.prefix'));
-    }
+    // if (app.configure.has('app.prefix')) {
+    //     app.container.setGlobalPrefix(await app.configure.get<string>('app.prefix'));
+    // }
     // 为class-validator添加容器以便在自定义约束中可以注入dataSource等依赖
     useContainer(app.container.select(BootModule), {
         fallbackOnErrors: true,

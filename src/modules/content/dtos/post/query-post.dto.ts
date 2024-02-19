@@ -15,6 +15,9 @@ import { PostOrderType, SelectTrashMode } from '../../constants';
  */
 @DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
+    /**
+     * 全文搜索
+     */
     @MaxLength(100, {
         always: true,
         message: '搜索字符串长度不得超过$constraint1',
@@ -22,33 +25,51 @@ export class QueryPostDto implements PaginateOptions {
     @IsOptional({ always: true })
     search?: string;
 
+    /**
+     * 是否查询已发布(全部文章:不填、只查询已发布的:true、只查询未发布的:false)
+     */
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
     @IsOptional()
     isPublished?: boolean;
 
+    /**
+     * 查询结果排序,不填则综合排序
+     */
     @IsEnum(PostOrderType, {
         message: `排序规则必须是${Object.values(PostOrderType).join(',')}其中一项`,
     })
     @IsOptional()
     orderBy?: PostOrderType;
 
+    /**
+     * 当前页
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '当前页必须大于1' })
     @IsNumber()
     @IsOptional()
-    page = 1;
+    page?: number = 1;
 
+    /**
+     * 每页显示数据
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '每页显示数据必须大于1' })
     @IsNumber()
     @IsOptional()
-    limit = 10;
+    limit?: number = 10;
 
+    /**
+     * 根据分类ID查询此分类及其后代分类下的文章
+     */
     @IsUUID(undefined, { message: '分类ID格式错误' })
     @IsOptional()
     category?: string;
 
+    /**
+     * 根据管理标签ID查询
+     */
     @IsUUID(undefined, { message: 'ID格式错误' })
     @IsOptional()
     tag?: string;

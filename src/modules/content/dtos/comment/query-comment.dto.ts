@@ -12,21 +12,30 @@ import { PaginateOptions } from '@/modules/database/types';
  */
 @DtoValidation({ type: 'query' })
 export class QueryCommentDto implements PaginateOptions {
+    /**
+     * 评论
+     */
     @IsUUID(undefined, { message: 'ID格式错误' })
     @IsOptional()
     post?: string;
 
+    /**
+     * 当前页
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '当前页必须大于1' })
     @IsNumber()
     @IsOptional()
-    page = 1;
+    page?: number = 1;
 
+    /**
+     * 每页显示数据
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '每页显示数据必须大于1' })
     @IsNumber()
     @IsOptional()
-    limit = 10;
+    limit?: number = 10;
 }
 /**
  * 评论树查询

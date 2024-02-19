@@ -11,6 +11,9 @@ import { SelectTrashMode } from '../../constants';
 
 @DtoValidation({ type: 'query' })
 export class QueryCategoryTreeDto {
+    /**
+     * 根据软删除状态查询
+     */
     @IsEnum(SelectTrashMode)
     @IsOptional()
     trashed?: SelectTrashMode;
@@ -18,15 +21,21 @@ export class QueryCategoryTreeDto {
 
 @DtoValidation({ type: 'query' })
 export class QueryCategoryDto extends QueryCategoryTreeDto implements PaginateOptions {
+    /**
+     * 当前页
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '当前页必须大于1' })
     @IsNumber()
     @IsOptional()
-    page = 1;
+    page?: number = 1;
 
+    /**
+     * 每页显示数据
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '每页显示数据必须大于1' })
     @IsNumber()
     @IsOptional()
-    limit = 10;
+    limit?: number = 10;
 }

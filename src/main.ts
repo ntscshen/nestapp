@@ -2,6 +2,7 @@ import { isNil } from 'lodash';
 
 import { createData } from './constants';
 import { createApp, startApp } from './modules/core/app';
+import { echoApi } from './modules/core/utils';
 
 // async function bootstrap() {
 //     // 使用 fastify 驱动
@@ -20,14 +21,16 @@ import { createApp, startApp } from './modules/core/app';
 // }
 // bootstrap();
 
-startApp(createApp(createData), ({ configure }) => async () => {
+startApp(createApp(createData), ({ configure, container }) => async () => {
     console.log();
+
+    echoApi(configure, container);
+
     const chalk = (await import('chalk')).default;
     const appUrl = await configure.get<string>('app.url');
     // 设置应用的API前缀,如果没有则与appUrl相同
     const urlPrefix = await configure.get('app.prefix', undefined);
 
-    console.log('🚀 ~ startApp ~ urlPrefix:', urlPrefix);
     const apiUrl = !isNil(urlPrefix)
         ? `${appUrl}${urlPrefix.length > 0 ? `/${urlPrefix}` : urlPrefix}`
         : appUrl;
