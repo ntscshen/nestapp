@@ -32,11 +32,13 @@ export class Restful extends BaseRestful {
     async create(config: ApiConfig) {
         this.createConfig(config);
         await this.createRoutes();
-        this.createDocs();
+        this.createDocs(); // 将动态创建Swagger的相关信息存储到this._docs中
     }
 
     getModuleImports() {
-        return [...Object.values(this.modules), RouterModule.register(this.routes)];
+        const moduleImports = [...Object.values(this.modules), RouterModule.register(this.routes)];
+        console.log('🚀 ~ Restful ~ getModuleImports ~ moduleImports 动态路由注册:', moduleImports);
+        return moduleImports;
     }
 
     /**
@@ -59,6 +61,17 @@ export class Restful extends BaseRestful {
      * @param option
      * @param routes
      * @param parent
+     * 目标是为每个路由（包括子路由）生成 Swagger 文档的配置，
+     * 通过递归处理来确保即使是嵌套路由也能被正确处理并包含在最终的 Swagger 文档中。
+     * 这个过程涉及合并基础的 Swagger 选项与路由特有的文档信息，以及处理子路由的递归逻辑。
+     *
+     * 返回的数据结构是非嵌套的。即使是处理嵌套路由，
+     * 该方法也会将所有路由（无论是父路由还是子路由）的文档配置平铺在同一个对象中，而不是以嵌套结构表示。
+     *
+     * {
+     *   "parent": { 父路由的 Swagger 配置 },
+     *   "parent.child": { 子路由的 Swagger 配 }
+     * }
      */
     protected getRouteDocs(
         option: Omit<SwaggerOption, 'include'>,
@@ -71,13 +84,15 @@ export class Restful extends BaseRestful {
          * @param {Omit<SwaggerOption, 'include'>} vDoc
          * @param {RouteOption} route
          */
-        const mergeDoc = (vDoc: Omit<SwaggerOption, 'include'>, route: RouteOption) => ({
-            ...vDoc,
-            ...route.doc,
-            tags: Array.from(new Set([...(vDoc.tags ?? []), ...(route.doc?.tags ?? [])])),
-            path: genDocPath(route.path, this.config.docuri, parent),
-            include: this.getRouteModules([route], parent),
-        });
+        const mergeDoc = (vDoc: Omit<SwaggerOption, 'include'>, route: RouteOption) => {
+            return {
+                ...vDoc,
+                ...route.doc,
+                tags: Array.from(new Set([...(vDoc.tags ?? []), ...(route.doc?.tags ?? [])])),
+                path: genDocPath(route.path, this.config.docuri, parent),
+                include: this.getRouteModules([route], parent),
+            };
+        };
         let routeDocs: { [key: string]: SwaggerOption } = {};
 
         // 判断路由是否有除tags之外的其它doc属性
@@ -107,8 +122,8 @@ export class Restful extends BaseRestful {
 
     /**
      * 生成版本文档配置
-     * @param name
-     * @param voption
+     * @param name key值
+     * @param voption v1版本中的routes值
      * @param isDefault
      */
     protected getDocOption(name: string, voption: VersionOption, isDefault = false) {
@@ -143,7 +158,13 @@ export class Restful extends BaseRestful {
 
     /**
      * 排除已经添加的模块
+     * exclude 排除
      * @param routeModules
+     * 核心目的：
+     *   是从一组模块中过滤掉那些不属于当前路由配置下的模块，
+     *   确保只有与当前路由（及其子路由）相关联的模块被保留。
+     *   这样做的目的是为了在处理如动态生成 Swagger 文档或其他基于模块的操作时，
+     *   能够精确控制哪些模块应该被包含在当前的操作或文档生成过程中。
      */
     protected filterExcludeModules(routeModules: Type<any>[]) {
         const excludeModules: Type<any>[] = [];

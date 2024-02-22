@@ -54,12 +54,23 @@ export abstract class BaseRestful {
 
     get modules(): { [key: string]: Type<any> } {
         return this._modules;
-    } /**
+    }
+
+    /**
      * 创建配置
      * @param config
      */
-
     protected createConfig(config: ApiConfig) {
+        console.log('🚀 ~ BaseRestful ~ createConfig ~ 创建配置 config:', config);
+        // 🚀 ~ BaseRestful ~ createConfig ~ config: {
+        //     title: '3R_ntscshen',
+        //     description: '3R_ntscshen_TS全栈开发',
+        //     auth: true,
+        //     docuri: 'api/docs',
+        //     default: 'v1',
+        //     enabled: [],
+        //     versions: { v1: { routes: [Array] } }
+        //   }
         if (!config.default) {
             throw new Error('default api version name should been config!');
         }

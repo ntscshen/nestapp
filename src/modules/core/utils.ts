@@ -71,13 +71,12 @@ export async function createBootModule(
 ): Promise<Type<any>> {
     const { globals = {} } = options;
     // 获取需要导入的模块
-    // console.log('configure :>> ', configure);
-
-    /** 就是create中的modules属性，执行之后的返回值就是两个动态模块
+    /**
+    就是create中的modules属性，执行之后的返回值就是两个动态模块
     modules: async (configure) => [
-      ContentModule.forRoot(configure),
-      DatabaseModule.forRoot(configure),
-    ],
+        ContentModule.forRoot(configure),
+        DatabaseModule.forRoot(configure),
+    ]
      * */
     const modules = await options.modules(configure);
 

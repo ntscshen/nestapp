@@ -48,8 +48,8 @@ export const createRouteModuleTree = (
     modules: { [key: string]: Type<any> },
     routes: RouteOption[],
     parentModule?: string,
-): Promise<Routes> =>
-    Promise.all(
+): Promise<Routes> => {
+    return Promise.all(
         routes.map(async ({ name, path, children, controllers, doc }) => {
             // 自动创建路由模块的名称
             const moduleName = parentModule ? `${parentModule}.${name}` : name;
@@ -93,3 +93,4 @@ export const createRouteModuleTree = (
             return route;
         }),
     );
+};

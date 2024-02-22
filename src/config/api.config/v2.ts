@@ -2,7 +2,7 @@ import { Configure } from '@/modules/config/configure';
 import * as contentControllers from '@/modules/content/controllers';
 import { VersionOption } from '@/modules/restful/types';
 
-export const v1 = async (configure: Configure): Promise<VersionOption> => ({
+export const v2 = async (configure: Configure): Promise<VersionOption> => ({
     routes: [
         {
             name: 'app',
@@ -20,9 +20,16 @@ export const v1 = async (configure: Configure): Promise<VersionOption> => ({
             },
             children: [
                 {
-                    name: 'content',
-                    path: '/content',
+                    name: 'post',
+                    path: '/post',
                     controllers: Object.values(contentControllers),
+                    children: [
+                        {
+                            name: 'dog',
+                            path: '/dog',
+                            controllers: Object.values(contentControllers),
+                        },
+                    ],
                 },
             ],
         },
