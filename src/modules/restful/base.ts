@@ -56,47 +56,54 @@ export abstract class BaseRestful {
         return this._modules;
     }
 
+    // 创建配置 config: {
+    //     title: '3R_ntscshen',
+    //     description: '3R_ntscshen_TS全栈开发',
+    //     auth: true,
+    //     docuri: 'api/docs',
+    //     default: 'v1',
+    //     enabled: [ 'v1', 'v2' ],
+    //     versions: { v1: { routes: [Array] }, v2: { routes: [Array] } }
+    //   }
     /**
      * 创建配置
      * @param config
      */
     protected createConfig(config: ApiConfig) {
         console.log('🚀 ~ BaseRestful ~ createConfig ~ 创建配置 config:', config);
-        // 🚀 ~ BaseRestful ~ createConfig ~ config: {
-        //     title: '3R_ntscshen',
-        //     description: '3R_ntscshen_TS全栈开发',
-        //     auth: true,
-        //     docuri: 'api/docs',
-        //     default: 'v1',
-        //     enabled: [],
-        //     versions: { v1: { routes: [Array] } }
-        //   }
         if (!config.default) {
             throw new Error('default api version name should been config!');
         }
+        console.log('Object.entries(config.versions) :>> ', Object.entries(config.versions));
+        // [ [ 'v1', { routes: [Array] } ], [ 'v2', { routes: [Array] } ] ]
         const versionMaps = Object.entries(config.versions)
-            // 过滤启用的版本
+            // 过滤启用的版本：从配置的所有版本中过滤出应该被启用(激活 enabled)的版本，其中default是必须包含的。
             .filter(([name]) => {
                 if (config.default === name) return true;
                 return config.enabled.includes(name);
             })
-            // 合并版本配置与总配置
+            // 合并版本配置与总配置：将全局配置与每个版本的特定配置进行合并。同时对版本中的路由进行清理和标准化处理。
             .map(([name, version]) => [
                 name,
                 {
                     ...pick(config, ['title', 'description', 'auth']),
-                    ...version,
+                    ...version, // 展开操作符，如果特定版本配置与全局配置重叠，版本特定配置优先
+                    // 合并全局配置和特定版本配置中的 tags。 config.tags是全局共享标签
                     tags: Array.from(new Set([...(config.tags ?? []), ...(version.tags ?? [])])),
-                    routes: getCleanRoutes(version.routes ?? []),
+                    routes: getCleanRoutes(version.routes ?? []), // 清理和标准化处理
                 },
             ]);
+        // 每个版本在经过这一步骤处理后，将得到一个完整的配置对象
+        // 这个对象既包含了从全局配置继承的属性，也包含了该版本特有的设置（如特定的 tags 和经过清理的 routes）。
 
+        // 1. 只包含那些被启用的版本，并且每个版本的配置都已经包含了必要的合并和处理。
         config.versions = Object.fromEntries(versionMaps);
-        // 设置所有版本号
+        // 2. 设置所有版本号。提取 config.versions 对象的键（即版本名称），将所有被启用（并且已经处理过的）版本的名称存储到类的 _versions 属性中
         this._versions = Object.keys(config.versions);
-        // 设置默认版本号
+        // 3. 设置默认版本号。默认版本对于处理未明确指定版本的 API 请求非常重要，它定义了这种情况下应该使用哪个版本的 API。
         this._default = config.default;
-        // 启用的版本中必须包含默认版本
+        // 4. 启用的版本中必须包含默认版本。确保了配置的默认版本实际上是存在并被启用的。
+        //    如果默认版本没有被包括在启用的版本中，这通常表示配置有误，因此抛出错误，提示开发者需要修正配置。
         if (!this._versions.includes(this._default)) {
             throw new Error(`Default api version named ${this._default} not exists!`);
         }

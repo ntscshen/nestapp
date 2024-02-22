@@ -18,6 +18,7 @@ export const trimPath = (routePath: string, addPrefix = true) =>
 
 /**
  * 遍历路由及其子孙路由以清理路径前缀
+ * 递归地清理一个路由配置数组中的所有路由路径，并对有子路由的配置进行递归处理。
  * */
 export const getCleanRoutes = (data: RouteOption[]): RouteOption[] => {
     return data.map((option) => {

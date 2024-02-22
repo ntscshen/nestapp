@@ -12,7 +12,7 @@ export const api: ConfigureFactory<ApiConfig> = {
             description: configure.env.get('APP_DESCRIPTION', '3R_ntscshen_TS全栈开发'),
             auth: true,
             docuri: 'api/docs',
-            default: configure.env.get('API_DEFAULT_VERSION', 'v1'),
+            default: configure.env.get('API_DEFAULT_VERSION', 'v1'), // default 被视为必须的配置项，以确保 API 的稳定性和可靠性。
             enabled: ['v1', 'v2'],
             versions: {
                 v1: await v1(configure),

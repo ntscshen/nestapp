@@ -29,17 +29,23 @@ export class Restful extends BaseRestful {
         return this._docs;
     }
 
+    // 准备和组织数据，以便后续的使用和处理
     async create(config: ApiConfig) {
+        // 1. 确保在开始创建路由/生成文档之前，所有的API配置都正确设置并可用。这是后续步骤正确执行的基础条件
         this.createConfig(config);
+        // 2. 基于提供的配置动态构建路由信息的数据源
         await this.createRoutes();
+        // 3. 根据应用的路由配置和API元数据动态生成Swagger文档所需的数据源
         this.createDocs(); // 将动态创建Swagger的相关信息存储到this._docs中
     }
 
     getModuleImports() {
+        console.log('this.routes :>> ', this.routes);
         const moduleImports = [...Object.values(this.modules), RouterModule.register(this.routes)];
         console.log('🚀 ~ Restful ~ getModuleImports ~ moduleImports 动态路由注册:', moduleImports);
         return moduleImports;
     }
+    // http://127.0.0.1:3000/api/content/categories?page=1&limit=10
 
     /**
      * 创建文档配置
