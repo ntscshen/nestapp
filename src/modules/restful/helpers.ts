@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common';
 import { RouteTree, Routes } from '@nestjs/core';
 import { ApiTags } from '@nestjs/swagger';
-import { camelCase, omit, trim, upperFirst } from 'lodash';
+import { camelCase, isNil, omit, trim, upperFirst } from 'lodash';
 
 import { Configure } from '../config/configure';
 
@@ -44,6 +44,30 @@ export const genDocPath = (routePath: string, prefix?: string, version?: string)
     trimPath(`${prefix}${version ? `/${version.toLowerCase()}/` : '/'}${routePath}`, false);
 
 // src/modules/restful/helpers.ts
+
+// routes = {
+//     title: '3R_ntscshen',
+//     description: '3R_ntscshen_TS全栈开发',
+//     auth: true,
+//     routes: [
+//       {
+//         name: 'app',
+//         path: '/',
+//         controllers: [],
+//         doc: [Object],
+//         children: [Array]
+//       }
+//     ],
+//     tags: []
+//   }
+/**
+ * 动态构建应用中的路由模块树。它通过递归处理每个路由配置项（包括子路由），
+ * 为每个路由创建相应的 NestJS 模块，并最终返回一个包含所有路由模块信息的 Promise。
+ * @param configure 配置服务
+ * @param modules 已创建的模块集合
+ * @param routes 已经创建的路由
+ * @param parentModule 父模块的名称
+ */
 export const createRouteModuleTree = (
     configure: Configure,
     modules: { [key: string]: Type<any> },
@@ -69,10 +93,11 @@ export const createRouteModuleTree = (
             // 为每个没有自己添加`ApiTags`装饰器的控制器添加Tag
             if (doc?.tags && doc.tags.length > 0) {
                 controllers.forEach((controller) => {
-                    !Reflect.getMetadata('swagger/apiUseTags', controller) &&
+                    if (!Reflect.getMetadata('swagger/apiUseTags', controller)) {
                         ApiTags(
                             ...doc.tags.map((tag) => (typeof tag === 'string' ? tag : tag.name))!,
                         )(controller);
+                    }
                 });
             }
             // 创建路由模块,并导入所有控制器的依赖模块
@@ -94,4 +119,15 @@ export const createRouteModuleTree = (
             return route;
         }),
     );
+};
+
+/**
+ * 生成最终路由路径(为路由路径添加自定义及版本前缀)
+ * @param routePath
+ * @param prefix
+ * @param version
+ */
+export const genRoutePath = (routePath: string, prefix?: string, version?: string) => {
+    const addVersion = `${version ? `/${version.toLowerCase()}/` : '/'}${routePath}`;
+    return isNil(prefix) ? trimPath(addVersion) : trimPath(`${prefix}${addVersion}`);
 };

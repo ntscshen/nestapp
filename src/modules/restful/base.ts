@@ -1,21 +1,12 @@
 import { Type } from '@nestjs/common';
 import { Routes } from '@nestjs/core';
 
-import { isNil, pick } from 'lodash';
+import { pick } from 'lodash';
 
 import { Configure } from '../config/configure';
 
-import { createRouteModuleTree, getCleanRoutes, trimPath } from './helpers';
+import { createRouteModuleTree, genRoutePath, getCleanRoutes } from './helpers';
 import { ApiConfig, RouteOption } from './types';
-/**
- * 生成最终路由路径(为路由路径添加自定义及版本前缀)
- * @param routePath
- * @param version
- */
-export const genRoutePath = (routePath: string, prefix?: string, version?: string) => {
-    const addVersion = `${version ? `/${version.toLowerCase()}/` : '/'}${routePath}`;
-    return isNil(prefix) ? trimPath(addVersion) : trimPath(`${prefix}${addVersion}`);
-};
 
 // BaseRestful类作为一个抽象基类，提供了构建RESTful API服务的基础框架。
 // 它通过依赖注入一个配置管理器（Configure实例）来访问应用配置，并要求任何继承自该类的子类实现create方法，
@@ -110,29 +101,48 @@ export abstract class BaseRestful {
         this.config = config;
     }
 
+    /**
+     * 创建路由树及路由模块
+     * 核心目的: 动态创建路由树和相应的路由模块，这一过程是基于配置中定义的不同API版本进行的。
+     * 主要功能：根据配置（包括不同的API版本和每个版本下的路由配置）来创建一组符合动态路由规范的数据结构。
+     *          并最终将这组数据结构赋值给 this._routes。以便为后续的路由注册和模块导入提供基础。
+     *           1. 包括每个路由的路径 (path)
+     *           2. 对应的 NestJS 模块 (module)
+     *           3. 以及可能存在的子路由 (children)
+     * @returns undefined
+     */
     protected async createRoutes() {
         const prefix = await this.configure.get<string>('app.prefix');
         const versionMaps = Object.entries(this.config.versions);
 
         // 对每个版本的路由使用'resolveRoutes'方法进行处理
-        this._routes = (
-            await Promise.all(
-                versionMaps.map(async ([name, version]) =>
-                    (
-                        await createRouteModuleTree(
-                            this.configure,
-                            this._modules,
-                            version.routes ?? [],
-                            name,
-                        )
-                    ).map((route) => ({
-                        ...route,
-                        path: genRoutePath(route.path, prefix, name),
-                    })),
-                ),
-            )
-        ).reduce((o, n) => [...o, ...n], []);
+        this._routes =
+            // 使用 Promise.all 允许程序同时处理所有版本的路由创建，而不是按顺序一个接一个地处理，从而显著提高了处理效率。
+            (
+                await Promise.all(
+                    versionMaps.map(async ([name, version]) => {
+                        const xxxxx = (
+                            await createRouteModuleTree(
+                                this.configure,
+                                this._modules,
+                                version.routes ?? [],
+                                // 这里的version就是v1,v2
+                                // routes就是v1.ts,v2.ts中的 routes
+                                name,
+                            )
+                        ).map((route) => ({
+                            ...route,
+                            path: genRoutePath(route.path, prefix, name),
+                        }));
+                        return xxxxx;
+                    }),
+                )
+            ).reduce((o, n) => [...o, ...n], []);
         // 生成一个默认省略版本号的路由
+        // 我什么设计了一个省略版本号的路由?
+        //      1. 省略版本号的路由设计是为了提供便捷访问和用户无感知的体验，同时给予API维护者调整默认版本的灵活性。
+        //      2. 这种设计允许用户在不指定具体版本的情况下，自动访问到被认为是最稳定或最适合当前用户需求的API版本
+
         const defaultVersion = this.config.versions[this._default];
         this._routes = [
             ...this._routes,

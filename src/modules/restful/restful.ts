@@ -33,9 +33,9 @@ export class Restful extends BaseRestful {
     async create(config: ApiConfig) {
         // 1. 确保在开始创建路由/生成文档之前，所有的API配置都正确设置并可用。这是后续步骤正确执行的基础条件
         this.createConfig(config);
-        // 2. 基于提供的配置动态构建路由信息的数据源
+        // 2. 基于提供的配置动态构建路由信息的数据源(this._routes)
         await this.createRoutes();
-        // 3. 根据应用的路由配置和API元数据动态生成Swagger文档所需的数据源
+        // 3. 根据应用的路由配置和API元数据动态生成Swagger文档所需的数据源(this._docs)
         this.createDocs(); // 将动态创建Swagger的相关信息存储到this._docs中
     }
 
@@ -109,7 +109,7 @@ export class Restful extends BaseRestful {
             const { name, doc, children } = route;
             const moduleName = parent ? `${parent}.${name}` : name;
 
-            // 加入在版本DOC中排除模块列表
+            // 加入在版本DOC中排除模块列表(当路由有额外的文档配置/当前路由是一个子路由)
             if (hasAdditional(doc) || parent) this.excludeVersionModules.push(moduleName);
 
             // 添加到routeDocs中
