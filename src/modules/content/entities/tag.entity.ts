@@ -6,7 +6,7 @@ import {
     Index,
     ManyToMany,
     PrimaryColumn,
-    Relation,
+    type Relation,
 } from 'typeorm';
 
 import { PostEntity } from './post.entity';

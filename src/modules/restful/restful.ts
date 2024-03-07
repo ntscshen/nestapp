@@ -40,7 +40,7 @@ export class Restful extends BaseRestful {
     }
 
     getModuleImports() {
-        console.log('this.routes :>> ', this.routes);
+        // console.log('this.routes :>> ', this.routes);
         const moduleImports = [...Object.values(this.modules), RouterModule.register(this.routes)];
         console.log('🚀 ~ Restful ~ getModuleImports ~ moduleImports 动态路由注册:', moduleImports);
         return moduleImports;
@@ -209,7 +209,6 @@ export class Restful extends BaseRestful {
                 );
             }
             builder.setVersion(version);
-            console.log('isNil(metadata) :>> ', isNil(metadata));
             if (!isNil(metadata)) await SwaggerModule.loadPluginMetadata(metadata);
             const document = SwaggerModule.createDocument(container, builder.build(), {
                 include: include.length > 0 ? include : [() => undefined as any],

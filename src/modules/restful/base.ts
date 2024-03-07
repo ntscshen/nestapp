@@ -61,11 +61,11 @@ export abstract class BaseRestful {
      * @param config
      */
     protected createConfig(config: ApiConfig) {
-        console.log('🚀 ~ BaseRestful ~ createConfig ~ 创建配置 config:', config);
+        // console.log('🚀 ~ BaseRestful ~ createConfig ~ 创建配置 config:', config);
         if (!config.default) {
             throw new Error('default api version name should been config!');
         }
-        console.log('Object.entries(config.versions) :>> ', Object.entries(config.versions));
+        // console.log('Object.entries(config.versions) :>> ', Object.entries(config.versions));
         // [ [ 'v1', { routes: [Array] } ], [ 'v2', { routes: [Array] } ] ]
         const versionMaps = Object.entries(config.versions)
             // 过滤启用的版本：从配置的所有版本中过滤出应该被启用(激活 enabled)的版本，其中default是必须包含的。

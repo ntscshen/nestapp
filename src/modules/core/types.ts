@@ -1,5 +1,9 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Ora } from 'ora';
+import { StartOptions } from 'pm2';
+import { CommandModule } from 'yargs';
+
+import { App } from '../config/types';
 /**
  * 应用配置
  */
@@ -39,7 +43,10 @@ export interface AppConfig {
     /**
      * 由url+api前缀生成的基础api url
      */
-    prefix?: string;
+    prefix?: string /**
+     * PM2配置
+     */;
+    pm2?: Omit<StartOptions, 'name' | 'cwd' | 'script' | 'args' | 'interpreter' | 'watch'>;
 }
 
 /**
@@ -63,3 +70,16 @@ export interface PanicOption {
      */
     exit?: boolean;
 }
+
+export interface CommandOption<T = RecordAny, U = RecordAny> extends CommandModule<T, U> {
+    /**
+     * 是否为执行后即退出进程的瞬时应用( 表示该命令执行完毕后应立即终止进程 )
+     */
+    instant?: boolean;
+}
+
+export type CommandItem<T = Record<string, any>, U = Record<string, any>> = (
+    app: Required<App>,
+) => Promise<CommandOption<T, U>>;
+
+export type CommandCollection = Array<CommandItem<any, any>>;

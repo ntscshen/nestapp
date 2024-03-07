@@ -23,13 +23,6 @@ export const v2 = async (configure: Configure): Promise<VersionOption> => ({
                     name: 'post',
                     path: '/post',
                     controllers: Object.values(contentControllers),
-                    children: [
-                        {
-                            name: 'dog',
-                            path: '/dog',
-                            controllers: Object.values(contentControllers),
-                        },
-                    ],
                 },
             ],
         },

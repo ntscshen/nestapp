@@ -7,11 +7,12 @@ import { App, ConfigureFactory, ConfigureRegister, CreateOptions } from '../conf
 
 import { getDefaultAppConfig } from './constants';
 
+import { createCommands } from './helpers/command';
 import { AppConfig } from './types';
 import { createBootModule } from './utils';
 
 // app实例常量
-export const app: App = { configure: new Configure() };
+export const app: App = { configure: new Configure(), commands: [] };
 
 /**
  * 创建一个应用
@@ -43,6 +44,9 @@ export const createApp = (options: CreateOptions) => async (): Promise<App> => {
     useContainer(app.container.select(BootModule), {
         fallbackOnErrors: true,
     });
+    // 命令配置的入口
+    app.commands = await createCommands(options.commands, app as Required<App>);
+    console.log('🚀 ~ createApp ~ app.commands:', app.commands);
     return app;
 };
 
@@ -71,6 +75,7 @@ export async function startApp(
     listened: (app: App) => () => Promise<void>,
 ) {
     const { container, configure } = await creator();
+    console.log('await configure.get<AppConfig>(app) :>> ', await configure.get<AppConfig>('app'));
     const { port, host } = await configure.get<AppConfig>('app');
 
     await container.listen(port, host, listened(app));

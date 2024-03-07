@@ -1,6 +1,10 @@
 import { ModuleMetadata, PipeTransform, Type } from '@nestjs/common';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 
+import { CommandModule } from 'yargs';
+
+import { CommandCollection } from '../core/types';
+
 import { Configure } from './configure';
 
 /**
@@ -71,6 +75,8 @@ export type App = {
     container?: NestFastifyApplication;
     // 配置类实例
     configure: Configure;
+    // 命令列表
+    commands: CommandModule<RecordAny, RecordAny>[];
 };
 /**
  * 创建应用的选项参数
@@ -82,6 +88,10 @@ export interface CreateOptions {
      * 返回值为需要导入的模块
      */
     modules: (configure: Configure) => Promise<Required<ModuleMetadata['imports']>>;
+    /**
+     * 应用命令
+     */
+    commands: () => CommandCollection;
     /**
      * 应用构建器
      */

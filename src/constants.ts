@@ -21,6 +21,7 @@ export const createData: CreateOptions = {
         factories: configs as any, // 配置入口
         storage: { enabled: true }, // 存储配置选项
     },
+    commands: () => [],
     modules: async (configure) => [
         DatabaseModule.forRoot(configure),
         RestfulModule.forRoot(configure),
@@ -52,7 +53,6 @@ export const createData: CreateOptions = {
                 // eslint-disable-next-line global-require
                 metadata = require(join(__dirname, 'metadata.ts')).default;
             }
-            console.log('metadata :>> ', metadata);
             await restful.factoryDocs(container, metadata);
         }
         return container;
