@@ -18,7 +18,14 @@
         "test:cov": "jest --coverage",
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
         "test:e2e": "jest --config ./test/jest-e2e.json",
-        "cli": "bun --bun src/console/bin.ts"
+        "cli": "bun --bun src/console/bin.ts",
+        "dev": "cross-env NODE_ENV=development pnpm cli start -w",
+        "prod": "cross-env NODE_ENV=production pnpm cli start -w -p",
+        "reload": "cross-env NODE_ENV=production pnpm cli start -r",
+        "build2": "cross-env NODE_ENV=production pnpm cli build",
+        "start2": "cross-env NODE_ENV=development nest start",
+        "start2:dev": "cross-env NODE_ENV=development nest start --watch",
+        "start2:prod": "cross-env NODE_ENV=production node dist/main"
     },
     "dependencies": {
         "@fastify/static": "6.12.0",

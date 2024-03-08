@@ -1,7 +1,9 @@
-import yargs from 'yargs';
+import { Arguments } from 'yargs';
 
 import { CommandItem } from '../types';
 
+import { getCLIConfig } from './helpers/config';
+import { start, startPM2 } from './helpers/start';
 import { StartCommandArguments } from './types';
 
 export const createStartCommand: CommandItem<any, StartCommandArguments> = async (app) => ({
@@ -60,10 +62,14 @@ export const createStartCommand: CommandItem<any, StartCommandArguments> = async
             default: false,
         },
     },
-    handler: async (args: yargs.Arguments<StartCommandArguments>) => {
+    handler: async (args: Arguments<StartCommandArguments>) => {
+        console.log('进入yargs - 命令 :>> ', args);
         const { configure } = app;
-        const appName = await configure.get<string>('app.name');
-        const watching = args.watch ? ' and watching' : '';
-        console.log(`String app ${appName}${watching}`);
+        const config = getCLIConfig(args.tsConfig, args.nestConfig, args.entry);
+        if (args.prod || args.restart) {
+            await startPM2(configure, args, config);
+        } else {
+            await start(args, config);
+        }
     },
 });

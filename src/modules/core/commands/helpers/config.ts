@@ -1,10 +1,10 @@
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 
 import { exit } from 'process';
 
 import { Configuration as NestCLIConfig } from '@nestjs/cli/lib/configuration';
 import { existsSync, readFileSync } from 'fs-extra';
-import { get, isNil, join, omit } from 'lodash';
+import { get, isNil, omit } from 'lodash';
 
 import { StartOptions } from 'pm2';
 import ts from 'typescript';
@@ -14,6 +14,7 @@ import { AppConfig } from '../../types';
 import { deepMerge, panic } from '../../utils';
 import { CLIConfig, Pm2Option } from '../types';
 
+// 把执行路径支持为应用的根目录（即src或dist的上一层目录）
 const cwdPath = resolve(__dirname, '../../../../..');
 
 export const getCLIConfig = (

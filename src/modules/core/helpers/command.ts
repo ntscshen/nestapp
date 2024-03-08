@@ -14,7 +14,6 @@ export async function createCommands(
     app: Required<App>,
 ): Promise<CommandModule<any, any>[]> {
     const collection: CommandCollection = [...factory(), ...Object.values(coreCommands)];
-    console.log('🚀 ~ collection:', collection);
     const commands = await Promise.all(collection.map(async (command) => command(app)));
     return commands.map((command) => ({
         ...command,
