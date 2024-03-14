@@ -10,6 +10,7 @@ import { isNil } from 'lodash';
 import * as configs from './config';
 import { CreateOptions } from './modules/config/types';
 import { ContentModule } from './modules/content/content.module';
+import * as dbCommands from './modules/database/commands';
 import { DatabaseModule } from './modules/database/database.module';
 import { Restful } from './modules/restful/restful';
 import { RestfulModule } from './modules/restful/restful.module';
@@ -21,7 +22,7 @@ export const createData: CreateOptions = {
         factories: configs as any, // 配置入口
         storage: { enabled: true }, // 存储配置选项
     },
-    commands: () => [],
+    commands: () => [...Object.values(dbCommands)],
     modules: async (configure) => [
         DatabaseModule.forRoot(configure),
         RestfulModule.forRoot(configure),

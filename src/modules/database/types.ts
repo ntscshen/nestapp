@@ -8,6 +8,8 @@ import {
     TreeRepository,
 } from 'typeorm';
 
+import { Arguments } from 'yargs';
+
 import { SelectTrashMode } from '../content/constants';
 
 import { BaseRepository } from './base/repository';
@@ -105,15 +107,15 @@ export type ServiceListQueryOption<E extends ObjectLiteral> =
  * 自定义数据库配置
  * */
 export type DbConfig = {
-    common: Record<string, any>;
-    connections: Array<TypeOrmModuleOptions>;
+    common: Record<string, any> & DbAdditionalOption;
+    connections: Array<TypeOrmModuleOptions & { name?: string } & DbAdditionalOption>;
 };
 /**
  * Typeorm连接配置
  * */
 export type TypeormOption = Omit<TypeOrmModuleOptions, 'name' | 'migrations'> & {
     name: string;
-};
+} & DbAdditionalOption;
 
 /**
  * 最终数据库配置
@@ -131,3 +133,73 @@ export type RepositoryType<E extends ObjectLiteral> =
     | TreeRepository<E>
     | BaseRepository<E>
     | BaseTreeRepository<E>;
+
+/**
+ * 额外数据库选项，用于CLI工具
+ * */
+type DbAdditionalOption = {
+    paths?: {
+        // 迁移文件路径
+        migration?: string;
+    };
+};
+
+export type TypeOrmArguments = Arguments<{
+    connection?: string;
+}>;
+
+export interface MigrationCreateOptions {
+    name: string;
+}
+
+/**
+ * 创建迁移命令参数
+ */
+export type MigrationCreateArguments = TypeOrmArguments & MigrationCreateOptions;
+
+/**
+ * 生成迁移处理器选项
+ * Dry Run 干运行，这是一种测试模式，其中迁移生成的命令会执行所有正常操作，但不会实际在数据库上应用变更。
+ *         它允许开发者预览将要执行的 SQL 语句，而不产生实际影响。这对于验证迁移逻辑是否按预期工作非常有用。
+ * */
+export interface MigrationGenerateOptions {
+    name?: string;
+    run?: boolean;
+    // pretty 打印 sql（ 是否打印生成的迁移文件所要执行的SQL，默认：false ）
+    pretty?: boolean;
+    // 是否只打印生成的迁移文件的内容，而不是直接生成迁移文件，默认: false
+    dryrun?: boolean;
+    // 是否只验证数据库是最新的而不是直接生成迁移，默认: false
+    check?: boolean;
+}
+
+export type MigrationGenerateArguments = TypeOrmArguments & MigrationGenerateOptions;
+
+/**
+ * 恢复迁移处理器选项
+ * 定义了回滚迁移命令的参数
+ */
+export interface MigrationRevertOptions {
+    transaction?: string;
+    fake?: boolean;
+}
+
+// 运行迁移处理器选项
+export interface MigrationRunOptions extends MigrationRevertOptions {
+    // 指示是否刷新数据库。设置为 true 时，操作将删除所有表结构并重新运行迁移来重建数据库模式。
+    // 这在开发或测试环境中重置数据库到初始状态非常有用，但显然在生产环境下是危险且不应使用的。
+    refresh?: boolean;
+    // 是否仅删除数据库表结构而不重新运行迁移。
+    // 这可以用来清理数据库，为重新构建表结构做准备，同样在生成环境下不应该使用
+    onlydrop?: boolean;
+}
+
+/**
+ * 运行迁移的命令参数
+ */
+export type MigrationRunArguments = TypeOrmArguments & MigrationRunOptions;
+
+/**
+ * 恢复迁移的命令参数
+ */
+export type MigrationRevertArguments = TypeOrmArguments & MigrationRevertOptions;

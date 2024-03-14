@@ -1,3 +1,5 @@
+import { resolve } from 'path';
+
 import { Type } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
@@ -147,6 +149,9 @@ export const createDbOptions = (options: DbConfig) => {
             {
                 charset: 'utf8mb4',
                 logging: ['error'],
+                paths: {
+                    migration: resolve(__dirname, '../database/migrations'),
+                },
             },
             options.common ?? {},
             'replace',
@@ -161,6 +166,7 @@ export const createDbOptions = (options: DbConfig) => {
             {
                 ...newOption,
                 autoLoadEntities: true,
+                synchronize: false,
             } as any,
             'replace',
         ) as TypeormOption;

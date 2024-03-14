@@ -1,11 +1,9 @@
 import { Module, ModuleMetadata } from '@nestjs/common';
 
-import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { Configure } from '../config/configure';
 import { DatabaseModule } from '../database/database.module';
 
-import { addSubscribers } from '../database/helpers';
+import { addEntities, addSubscribers } from '../database/helpers';
 
 import * as entities from './entities';
 import * as repositories from './entities/repositories';
@@ -52,8 +50,8 @@ export class ContentModule {
         return {
             module: ContentModule,
             imports: [
-                TypeOrmModule.forFeature(Object.values(entities)),
-                // addEntities(configure, Object.values(entities)),
+                // TypeOrmModule.forFeature(Object.values(entities)),
+                addEntities(configure, Object.values(entities)),
                 DatabaseModule.forRepository(Object.values(repositories)),
             ],
             // // import * as contentControllers from '@/modules/content/controllers';

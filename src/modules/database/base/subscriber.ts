@@ -1,4 +1,7 @@
 import { Optional } from '@nestjs/common';
+import { NestFastifyApplication } from '@nestjs/platform-fastify';
+
+import { RawServerDefault } from 'fastify';
 import { isNil } from 'lodash';
 import {
     EntitySubscriberInterface,
@@ -17,8 +20,11 @@ import {
     DataSource,
 } from 'typeorm';
 
-import { getCustomRepository } from '../helpers';
+import { Configure } from '@/modules/config/configure';
 
+import { app } from '@/modules/core/app';
+
+import { getCustomRepository } from '../helpers';
 import { RepositoryType } from '../types';
 
 type SubscriberEvent<E extends ObjectLiteral> =
@@ -47,7 +53,10 @@ export abstract class BaseSubscriber<E extends ObjectLiteral>
      * 构造函数
      * @param dataSource 数据连接池
      */
-    constructor(@Optional() protected dataSource?: DataSource) {
+    constructor(
+        @Optional() protected dataSource?: DataSource,
+        @Optional() protected _configure?: Configure,
+    ) {
         if (!isNil(this.dataSource)) this.dataSource.subscribers.push(this);
     }
 
@@ -57,6 +66,16 @@ export abstract class BaseSubscriber<E extends ObjectLiteral>
 
     protected getManage(event: SubscriberEvent<E>) {
         return this.dataSource ? this.dataSource.manager : event.manager;
+    }
+
+    get configure(): Configure {
+        return !isNil(this._configure)
+            ? this._configure
+            : app.container.get(Configure, { strict: false });
+    }
+
+    get container() {
+        return app.container as NestFastifyApplication<RawServerDefault>;
     }
 
     listenTo() {
