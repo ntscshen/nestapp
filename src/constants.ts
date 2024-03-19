@@ -38,7 +38,6 @@ export const createData: CreateOptions = {
                 logger: ['error', 'warn'],
             },
         );
-        console.log('configure :>> ', configure);
         if (!isNil(await configure.get<ApiConfig>('api', null))) {
             const restful = container.get(Restful);
             /**

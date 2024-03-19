@@ -46,7 +46,7 @@ export const createApp = (options: CreateOptions) => async (): Promise<App> => {
     });
     // 命令配置的入口
     app.commands = await createCommands(options.commands, app as Required<App>);
-    console.log('🚀 ~ createApp ~ app.commands:', app.commands);
+    // console.log('🚀 ~ createApp ~ app.commands:', app.commands);
     return app;
 };
 

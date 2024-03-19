@@ -42,7 +42,6 @@ export class Restful extends BaseRestful {
     getModuleImports() {
         // console.log('this.routes :>> ', this.routes);
         const moduleImports = [...Object.values(this.modules), RouterModule.register(this.routes)];
-        console.log('🚀 ~ Restful ~ getModuleImports ~ moduleImports 动态路由注册:', moduleImports);
         return moduleImports;
     }
     // http://127.0.0.1:3000/api/content/categories?page=1&limit=10

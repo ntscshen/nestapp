@@ -17,6 +17,7 @@ import {
     UniqueExistConstraint,
     UniqueTreeExistConstraint,
 } from './constraints/unique.exist.constraint';
+import { AutoMigrate } from './resolver/auto-migrate';
 import { DbOptions } from './types';
 
 @Module({})
@@ -54,6 +55,7 @@ export class DatabaseModule {
             UniqueExistConstraint,
             UniqueTreeConstraint,
             UniqueTreeExistConstraint,
+            AutoMigrate,
         ];
         return {
             global: true,

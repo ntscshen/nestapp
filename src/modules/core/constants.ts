@@ -12,7 +12,6 @@ export const DTO_VALIDATION_OPTIONS = 'DTO_VALIDATION_OPTIONS';
  * 默认应用配置
  * */
 export const getDefaultAppConfig = (configure: Configure) => {
-    console.log('configure :>> ', configure);
     const data = {
         name: getRandomCharString(9), // 生成一个随机应用名
         // host: configure.env.get<string>('APP_HOST', '127.0.0.1'), // 默认 127.0.0.1
@@ -24,8 +23,6 @@ export const getDefaultAppConfig = (configure: Configure) => {
         locale: configure.env.get<string>('APP_LOCALE', 'zh-CN'), // 默认 zh-CN
         fallbackLocale: configure.env.get<string>('APP_FALLBACK_LOCALE', 'en'), // 备用语言 默认 en
     };
-    console.log('🚀 ~ getDefaultAppConfig ~ data:', data);
-    console.log('process.env.NODE_ENV :>> ', process.env.NODE_ENV);
     return data;
 };
 // 这个 configure.env.get 是获取的Env类中的get，而不是Configure类中的get方法

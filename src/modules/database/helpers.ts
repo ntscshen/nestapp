@@ -149,6 +149,7 @@ export const createDbOptions = (options: DbConfig) => {
             {
                 charset: 'utf8mb4',
                 logging: ['error'],
+                autoMigrate: true, // 默认自动迁移
                 paths: {
                     migration: resolve(__dirname, '../database/migrations'),
                 },

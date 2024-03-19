@@ -37,6 +37,7 @@ export const MigrationRunHandler = async (
         const runner = new TypeormMigrationRun(); // 创建一个 TypeormMigrationRun 类的实例，该实例将用于执行迁移相关的操作。
         dataSource = new DataSource({ ...dbConfig } as DataSourceOptions);
         if (dataSource && dataSource.isInitialized) await dataSource.destroy();
+
         const options = {
             subscribers: [],
             synchronize: false, // 禁用自动同步
@@ -67,10 +68,13 @@ export const MigrationRunHandler = async (
             // 这运行在不需要执行任何迁移的情况下快速清空数据库
             if (args.onlydrop) process.exit(); // 程序立即退出，后续代码不会被执行
         }
+
         // 无论是否进行删除操作，以下逻辑都会被执行（除非onlydrop === true）
         // 将dropSchema: false主要为了确保不会再次触发删除操作
         dataSource.setOptions({ ...options, dropSchema: false });
+
         await dataSource.initialize(); // 设置了 dropSchema: true 并调用 initialize() 方法时，TypeORM 会在初始化过程中执行删除（刷新）数据库模式的操作。
+
         console.log();
         // 调用迁移逻辑，运行待处理的迁移
         // 数据源、事物模式选择、是否伪造模拟运行

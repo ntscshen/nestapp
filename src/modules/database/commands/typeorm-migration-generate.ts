@@ -7,12 +7,11 @@ import chalk from 'chalk';
 import { upperFirst } from 'lodash';
 import { DataSource } from 'typeorm';
 
-import { PlatformTools } from 'typeorm/platform/PlatformTools';
-
 import { MigrationGenerateOptions } from '../types';
 
 // TypeORM 提供的工具函数。
 const { CommandUtils } = require('typeorm/commands/CommandUtils');
+const { PlatformTools } = require('typeorm/platform/PlatformTools');
 
 // 将字符串转换为驼峰式大小写的函数。
 const { camelCase } = require('typeorm/util/StringUtils');
@@ -122,7 +121,7 @@ export class TypeormMigrationGenerate {
                 process.exit(1);
             }
 
-            // 干运行模式下，允许开发者预览将要执行的秦阿姨操作，而不实际在数据库上应用这些变更
+            // 干运行模式下，允许开发者预览将要执行的迁移操作，而不实际在数据库上应用这些变更
             if (args.dryrun) {
                 console.log(
                     chalk.green(

@@ -10,6 +10,7 @@ import { getRandomCharString, panic } from '@/modules/core/utils';
 
 import { DbConfig, MigrationGenerateArguments } from '../types';
 
+import { MigrationRunHandler } from './migration-run.handler';
 import { TypeormMigrationGenerate } from './typeorm-migration-generate';
 
 /**
@@ -21,7 +22,7 @@ export const MigrationGenerateHandler = async (
     configure: Configure,
     args: Arguments<MigrationGenerateArguments>,
 ) => {
-    // await MigrationRunHandler(configure, { connection: args.connection } as any);
+    await MigrationRunHandler(configure, { connection: args.connection } as any);
     console.log();
     const spinner = ora('Start to generate migration');
     const cname = args.connection ?? 'default';
@@ -46,6 +47,7 @@ export const MigrationGenerateHandler = async (
         spinner.succeed(chalk.greenBright.underline('\n 👍 Finished generate migration'));
         if (args.run) {
             console.log();
+            await MigrationRunHandler(configure, { connection: args.connection } as any);
         }
     } catch (error) {
         panic({ spinner, message: 'Generate migration failed!', error });

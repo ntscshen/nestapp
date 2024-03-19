@@ -138,6 +138,8 @@ export type RepositoryType<E extends ObjectLiteral> =
  * 额外数据库选项，用于CLI工具
  * */
 type DbAdditionalOption = {
+    // 是否在启动应用后自动运行迁移
+    autoMigrate?: boolean;
     paths?: {
         // 迁移文件路径
         migration?: string;

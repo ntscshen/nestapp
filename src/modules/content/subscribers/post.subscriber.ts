@@ -2,8 +2,6 @@ import { Optional } from '@nestjs/common';
 import { isNil } from 'lodash';
 import { DataSource, EventSubscriber } from 'typeorm';
 
-import { Configure } from '@/modules/config/configure';
-
 import { BaseSubscriber } from '@/modules/database/base/subscriber';
 
 import { PostBodyType } from '../constants';
@@ -16,7 +14,6 @@ export class PostSubscriber extends BaseSubscriber<PostEntity> {
 
     constructor(
         protected dataSource: DataSource,
-        protected configure: Configure,
         @Optional() protected sanitizeService?: SanitizeService,
     ) {
         super(dataSource);
@@ -38,14 +35,4 @@ export class PostSubscriber extends BaseSubscriber<PostEntity> {
             entity.body = sanitizeService.sanitize(entity.body);
         }
     }
-    // async afterLoad(entity: PostEntity) {
-    //     const configure = app.container.get(Configure, { strict: false });
-    //     const sanitizeService = (await configure.get('content.htmlEnabled'))
-    //         ? app.container.get(SanitizeService)
-    //         : undefined;
-    //     // 这里的type是PostBodyType，自己定义的内容类型
-    //     if (!isNil(sanitizeService) && entity.type === PostBodyType.HTML) {
-    //         entity.body = sanitizeService.sanitize(entity.body);
-    //     }
-    // }
 }
