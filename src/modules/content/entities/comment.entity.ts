@@ -1,6 +1,8 @@
 import { Exclude, Expose } from 'class-transformer';
 import * as typeorm from 'typeorm';
 
+import { UserEntity } from '@/modules/user/entities/user.entity';
+
 import { PostEntity } from './post.entity';
 
 @Exclude()
@@ -39,4 +41,12 @@ export class CommentEntity extends typeorm.BaseEntity {
         onUpdate: 'CASCADE',
     })
     post: typeorm.Relation<PostEntity>;
+
+    @Expose()
+    @typeorm.ManyToOne(() => UserEntity, (user) => user.comments, {
+        nullable: true,
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
+    author: typeorm.Relation<UserEntity>;
 }
