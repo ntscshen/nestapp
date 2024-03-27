@@ -67,7 +67,6 @@ export class IsPasswordConstraint implements ValidatorConstraintInterface {
  * 5. 必须包含数字，小写字母，大写字母，特殊符号
  * */
 export function IsPassword(model?: ModelType, validationOptions?: ValidationOptions) {
-    console.log('IsPassword :>> ', 'IsPassword');
     return (object: Record<string, any>, propertyName: string) => {
         registerDecorator({
             target: object.constructor,

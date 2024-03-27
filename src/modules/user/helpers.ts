@@ -41,7 +41,7 @@ export async function getUserConfig<T>(configure: Configure, key?: string): Prom
 }
 
 // 加密
-export const encrypt = async (configure: Configure, password: string) => {
+export const encrypt2 = async (configure: Configure, password: string) => {
     const hash = (await getUserConfig<number>(configure, 'hash')) || 10;
     try {
         return await Bun.password.hash(password, {
@@ -54,10 +54,29 @@ export const encrypt = async (configure: Configure, password: string) => {
 };
 
 // 解密
-export const decrypt = (password: string, hash: string) => {
+export const decrypt2 = (password: string, hash: string) => {
     try {
         return Bun.password.verifySync(password, hash);
     } catch (error) {
         return bcrypt.compareSync(password, hash);
     }
+};
+
+/**
+ * 加密明文密码
+ * @param configure
+ * @param password
+ */
+export const encrypt = async (configure: Configure, password: string) => {
+    const hash = (await getUserConfig<number>(configure, 'hash')) || 10;
+    return bcrypt.hashSync(password, hash);
+};
+
+/**
+ * 验证密码
+ * @param password 用户提供的明文密码。
+ * @param hashed 存储在数据库中的哈希过的密码。(是旧密码的哈希值，而不是明文的旧密码)
+ */
+export const decrypt = (password: string, hashed: string) => {
+    return bcrypt.compareSync(password, hashed);
 };

@@ -53,6 +53,9 @@ dependencies:
   class-validator:
     specifier: ^0.14.0
     version: 0.14.1
+  dayjs:
+    specifier: ^1.11.10
+    version: 1.11.10
   deepmerge:
     specifier: ^4.3.1
     version: 4.3.1

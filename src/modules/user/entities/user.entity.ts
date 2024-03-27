@@ -12,6 +12,8 @@ import {
 
 import { CommentEntity, PostEntity } from '@/modules/content/entities';
 
+import { AccessTokenEntity } from './access-token.entity';
+
 @Exclude() // 序列化包含或排除
 @Entity('user')
 export class UserEntity {
@@ -72,4 +74,10 @@ export class UserEntity {
         cascade: true,
     })
     comments: Relation<CommentEntity>[];
+
+    @Expose()
+    @OneToMany(() => AccessTokenEntity, (accessToken) => accessToken.user, {
+        cascade: true,
+    })
+    accessToken: Relation<AccessTokenEntity>[];
 }
